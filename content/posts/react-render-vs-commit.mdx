@@ -1,0 +1,43 @@
+---
+title: "Render와 Commit은 다른 단계다"
+summary: "React가 화면을 바꾸는 두 단계, Render와 Commit. 이 구분이 왜 useEffect 타이밍을 이해하는 열쇠인지."
+date: 2026-04-10
+category: "react"
+tags: ["react", "rendering", "fiber"]
+draft: false
+---
+
+## 두 단계
+
+React는 한 번의 업데이트를 **Render Phase**와 **Commit Phase**로 나눠 처리합니다.
+
+| Phase  | 무엇을 하는가                          | 순수한가 |
+| ------ | -------------------------------------- | -------- |
+| Render | 새로운 UI 트리(=Fiber tree)를 계산     | 순수     |
+| Commit | 계산된 결과를 실제 DOM에 반영          | 부수효과 |
+
+Render는 **여러 번 실행될 수 있고**, Commit은 **최종 한 번만** 실행됩니다.
+
+## 왜 이 구분이 중요한가
+
+```tsx
+function Counter() {
+  const [n, setN] = useState(0);
+  console.log("render");           // Render Phase
+  useEffect(() => {
+    console.log("commit 이후");     // Commit 이후
+  }, [n]);
+  return <button onClick={() => setN(n + 1)}>{n}</button>;
+}
+```
+
+- `console.log("render")` 는 Concurrent 모드에서 **두 번 찍힐 수 있습니다** (Strict Mode 아니어도).
+- `useEffect` 는 **항상 commit 이후** 실행됩니다. DOM에 반영된 걸 읽어야 하는 코드는 여기에.
+
+## 규칙 한 줄
+
+> **Render Phase에는 side-effect를 두지 않는다.**
+
+`useState`, `setState`, `fetch`, `document.*` 접근은 Render 중에 실행되면 안 됩니다. Render는 언제든 버려질 수 있기 때문.
+
+이 한 줄을 기억하면 `useEffect`와 `useLayoutEffect`의 존재 이유가 명확해집니다.
