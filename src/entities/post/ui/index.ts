@@ -2,6 +2,7 @@ export * from "./post-card";
 export * from "./post-list";
 export * from "./post-meta";
 export * from "./post-category-badge";
+export * from "./post-category-filter";
 export * from "./post-tag-badge";
 export * from "./post-header";
 export * from "./post-body";

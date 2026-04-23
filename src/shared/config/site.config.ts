@@ -20,12 +20,11 @@ export const siteConfig = {
     email: `${AUTHOR_HANDLE}.fe@gmail.com`,
   },
   social: {
-    github: `https://github.com/${AUTHOR_HANDLE}`,
+    github: `https://github.com/alchogh`,
   },
   nav: [
     { href: "/", label: "Home" },
     { href: "/posts", label: "Posts" },
-    { href: "/categories", label: "Categories" },
     { href: "/about", label: "About" },
   ],
 } as const;

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getAllPosts, PostList } from "@/entities/post";
+import { getAllPosts, PostCategoryFilter, PostList } from "@/entities/post";
 import { Container } from "@/shared/ui";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export default function PostsPage() {
 
   return (
     <Container>
-      <h1 className="pb-8 text-2xl font-semibold tracking-tight">Posts</h1>
+      <PostCategoryFilter />
       <PostList posts={posts} />
     </Container>
   );
