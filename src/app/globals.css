@@ -68,3 +68,57 @@ figure[data-rehype-pretty-code-figure] [data-highlighted-line] {
 :not(pre) > code {
   @apply rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.85em];
 }
+
+.markdown-alert {
+  @apply my-6 rounded-md border-l-4 bg-muted/40 px-4 py-3;
+  border-color: var(--alert-color, var(--color-border));
+}
+
+.markdown-alert > :first-child {
+  @apply mt-0;
+}
+
+.markdown-alert > :last-child {
+  @apply mb-0;
+}
+
+.markdown-alert .markdown-alert-title {
+  @apply mb-1 flex items-center gap-2 text-sm font-semibold;
+  color: var(--alert-color, var(--color-foreground));
+}
+
+.markdown-alert .markdown-alert-title svg {
+  @apply h-4 w-4;
+}
+
+.markdown-alert-note {
+  --alert-color: oklch(0.55 0.15 250);
+}
+.markdown-alert-tip {
+  --alert-color: oklch(0.55 0.15 155);
+}
+.markdown-alert-important {
+  --alert-color: oklch(0.55 0.18 300);
+}
+.markdown-alert-warning {
+  --alert-color: oklch(0.65 0.17 75);
+}
+.markdown-alert-caution {
+  --alert-color: oklch(0.6 0.2 25);
+}
+
+.dark .markdown-alert-note {
+  --alert-color: oklch(0.7 0.14 250);
+}
+.dark .markdown-alert-tip {
+  --alert-color: oklch(0.7 0.14 155);
+}
+.dark .markdown-alert-important {
+  --alert-color: oklch(0.7 0.16 300);
+}
+.dark .markdown-alert-warning {
+  --alert-color: oklch(0.78 0.15 75);
+}
+.dark .markdown-alert-caution {
+  --alert-color: oklch(0.72 0.18 25);
+}

@@ -13,7 +13,8 @@ const AUTHOR_HANDLE = "geonoooo";
 export const siteConfig = {
   name: AUTHOR_HANDLE,
   title: `${AUTHOR_HANDLE}.dev`,
-  description: "A personal blog about TypeScript, deep dives, and React.",
+  description:
+    "프론트엔드·인프라 학습 기록. TypeScript, Next.js, React부터 Nginx, AWS, GCP까지 직접 겪으며 정리한 글들을 모읍니다.",
   url: `https://${AUTHOR_HANDLE}.dev`,
   author: {
     name: AUTHOR_HANDLE,
