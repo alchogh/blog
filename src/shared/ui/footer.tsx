@@ -1,14 +1,22 @@
+import { Suspense } from "react";
 import { siteConfig } from "@/shared/config";
+import { VisitCounter, VisitTracker } from "@/entities/stats";
 import { Container } from "./container";
 
 export function Footer() {
   return (
-    <footer className="mt-24 border-t border-border py-8">
+    <footer className="mt-24 border-t border-border py-6">
       <Container
         size="wide"
-        className="flex flex-col items-center gap-3 text-xs text-muted-foreground"
+        className="flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row sm:gap-6"
       >
-        <nav className="flex items-center gap-4">
+        <p>
+          © {new Date().getFullYear()} {siteConfig.author.name}. All rights reserved.
+        </p>
+        <div className="flex items-center gap-4">
+          <Suspense fallback={null}>
+            <VisitCounter />
+          </Suspense>
           <a
             href={siteConfig.social.github}
             target="_blank"
@@ -20,10 +28,8 @@ export function Footer() {
           <a href="/rss.xml" className="hover:text-foreground transition-colors">
             RSS
           </a>
-        </nav>
-        <p>
-          © {new Date().getFullYear()} {siteConfig.author.name}
-        </p>
+        </div>
+        <VisitTracker />
       </Container>
     </footer>
   );
