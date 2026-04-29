@@ -5,6 +5,7 @@ import {
   getAllPosts,
   getPostBySlug,
   PostBody,
+  PostComments,
   PostHeader,
   PostNavigation,
 } from "@/entities/post";
@@ -98,6 +99,7 @@ export default async function PostPage({ params }: PostPageProps) {
       />
       <PostHeader post={post} />
       <PostBody code={post.body} />
+      <PostComments slug={slug} />
       <PostNavigation previous={previous} next={next} />
     </Container>
   );

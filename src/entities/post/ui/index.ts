@@ -6,4 +6,5 @@ export * from "./post-category-filter";
 export * from "./post-tag-badge";
 export * from "./post-header";
 export * from "./post-body";
+export * from "./post-comments";
 export * from "./post-navigation";
