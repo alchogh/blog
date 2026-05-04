@@ -16,7 +16,7 @@ export function ProfileHeader() {
         <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 sm:justify-start">
           <a
             href={`mailto:${siteConfig.author.email}`}
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs transition-colors"
+            className="text-muted-foreground hover:text-foreground focus-visible:text-foreground focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-sm text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
             <Mail className="h-3.5 w-3.5" />
             {siteConfig.author.email}
@@ -25,7 +25,7 @@ export function ProfileHeader() {
             href={siteConfig.social.github}
             target="_blank"
             rel="noreferrer"
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs transition-colors"
+            className="text-muted-foreground hover:text-foreground focus-visible:text-foreground focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-sm text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
             <GithubIcon className="h-3.5 w-3.5" />
             GitHub
