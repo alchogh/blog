@@ -39,7 +39,8 @@
     "sharp": "^0.34.5",
     "shiki": "^4.0.2",
     "tailwind-merge": "^3.5.0",
-    "velite": "^0.3.1"
+    "velite": "^0.3.1",
+    "wanted-sans": "^1.0.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

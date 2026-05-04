@@ -17,3 +17,85 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 규칙끼리 충돌하면 **clean-code > fsd-lite > 그 외** 순으로 우선. 규칙이 현재 코드와 다르게 보이면 바로 고치지 말고 먼저 사용자에게 확인.
 
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router) + React 19 (React Compiler 켜짐)
+- **Language**: TypeScript 5 (strict)
+- **Styling**: Tailwind CSS v4 (`@theme` 디렉티브, OKLCH 토큰, `.dark` 클래스 dark mode)
+- **Content (블로그 글)**: Velite (빌드 타임 MDX → 정적 데이터)
+- **Backend/Data**: Supabase (`@supabase/supabase-js`, service-role + RPC)
+- **Package manager**: pnpm
+
+### 쓰는 라이브러리
+
+- UI util: `clsx` + `tailwind-merge` → `cn()` 헬퍼. variant는 `class-variance-authority` (cva).
+- Icons: `lucide-react` (다른 아이콘 라이브러리 추가 금지)
+- Theme: `next-themes` (다크모드 토글)
+- Image: `sharp` (Next 내장 image pipeline)
+- Font: `wanted-sans` + Geist (next/font)
+- MDX 파이프라인: `rehype-pretty-code` + `shiki`, `rehype-slug`, `rehype-autolink-headings`, `remark-gfm`, `remark-github-blockquote-alert`
+- 댓글: giscus
+
+### 도입 금지 (오버엔지니어링)
+
+- `shadcn/ui`, Radix, MUI — 자체 `shared/ui`로 충분.
+- Redux, Zustand, Jotai 등 전역 상태 — Server Component + URL state로 해결.
+- styled-components, emotion — Tailwind v4 토큰만.
+- React Query/SWR — 읽기는 RSC 직결, 쓰기는 Route Handler.
+- Jest/Vitest — 블로그 규모상 의도적으로 안 씀 (아래 Testing 참조).
+
+위 목록 외 라이브러리 추가가 정말 필요하면 먼저 사용자에게 제안.
+
+## Commands
+
+- `pnpm dev` — Velite watch + Next dev 동시 실행
+- `pnpm build` — Velite 빌드 → Next 빌드
+- `pnpm start` — 프로덕션 서버
+- `pnpm lint` — ESLint (`eslint-config-next`)
+- `pnpm format` / `pnpm format:check` — Prettier
+- `pnpm content` — Velite 단독 (MDX 디버깅용)
+- `pnpm exec tsc --noEmit` — 타입체크 (스크립트 미등록, 직접 실행)
+
+dev에서 MDX 변경이 반영 안 되면 `pnpm content` 한 번 돌리고 재시작.
+
+## Testing & Quality Bar
+
+이 프로젝트는 **자동 테스트 프레임워크가 없다.** 블로그 규모상 의도적으로 안 둠.
+
+### "완료" 기준
+
+작업 완료라고 보고하기 전 다음을 통과:
+
+1. `pnpm exec tsc --noEmit` — 타입 에러 0
+2. `pnpm lint` — 에러 0
+3. `pnpm build` — 빌드 성공 (Velite + Next 둘 다)
+4. UI 변경이면 dev에서 라이트/다크 양쪽 직접 확인
+
+vitest/jest 임의 추가 금지. 빌드 깨졌을 때 우회 금지 — 원인 찾고 고침.
+
+## UI / Design Rules
+
+### 디자인 시스템
+
+- **Tailwind v4 `@theme` 토큰만 사용** ([src/app/globals.css](src/app/globals.css)).
+  `--color-background/foreground/muted/border/accent` 등 OKLCH 기반.
+- 새 색은 inline hex/rgb 금지 → `globals.css`의 `@theme`에 토큰 추가 후 `bg-*`/`text-*`.
+- 다크 모드는 `.dark` 클래스 + `@custom-variant dark`. 토글은 `next-themes`.
+
+### 컴포넌트
+
+- 자체 `src/shared/ui/`만 사용.
+- 클래스 합성은 **`cn()`** (clsx + tailwind-merge) 단일 헬퍼.
+- variant 3개 이상이면 cva.
+- 아이콘은 `lucide-react`만.
+
+### 접근성 / 인터랙션
+
+- hover / focus-visible / disabled 상태 시각 표현 필수.
+- `<button>` / `<a>` 시맨틱 우선, `div + onClick` 금지.
+- 다크/라이트 양쪽에서 contrast 확인.
+
+### 폰트
+
+- `next/font`로 로드. `<head>`에 직접 `<link>` 박지 말 것.
+
