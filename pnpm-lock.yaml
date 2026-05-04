@@ -59,6 +59,9 @@ importers:
       velite:
         specifier: ^0.3.1
         version: 0.3.1
+      wanted-sans:
+        specifier: ^1.0.3
+        version: 1.0.3
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4
@@ -2801,6 +2804,9 @@ packages:
 
   vfile@6.0.3:
     resolution: {integrity: sha512-KzIbH/9tXat2u30jf+smMwFCsno4wHVdNmzFyL+T/L3UGqqk6JKfVqOFOZEpZSHADH1k40ab6NUIXZq422ov3Q==}
+
+  wanted-sans@1.0.3:
+    resolution: {integrity: sha512-YU+mQRJMc97zMGFmxFjOvjdrF5Hi2zagc69bNP9n//i77Dlf9AWGfziZWYKdhQzPK5tw+e0iHcjLrZXDatxRTQ==}
 
   web-namespaces@2.0.1:
     resolution: {integrity: sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ==}
@@ -6174,6 +6180,8 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
+
+  wanted-sans@1.0.3: {}
 
   web-namespaces@2.0.1: {}
 
