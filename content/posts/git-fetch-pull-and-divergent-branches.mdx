@@ -1,0 +1,181 @@
+---
+title: "git fetch, pull, 그리고 fast-forward가 안 될 때"
+summary: "fetch/pull의 차이, fast-forward의 의미, divergent 상황에서 뭘 골라야 하는지"
+date: 2026-05-06
+category: "deep-dive"
+tags: ["git", "fetch", "pull", "rebase", "merge"]
+draft: false
+---
+
+> [!NOTE] 협업하다 보면 한 번쯤 만나는 그 메시지
+> `git pull`을 했는데 "divergent branches", "Not possible to fast-forward" 같은 게 뜨면서 멈추는 상황. 왜 막히는 건지, 그리고 뭘 골라야 하는지 정리한 글입니다.
+
+오늘 평소처럼 `git pull origin main`을 쳤는데 갑자기 빨간 글씨로 막혔습니다.
+
+```text
+hint: You have divergent branches and need to specify how to reconcile them.
+fatal: Need to specify how to reconcile divergent branches.
+```
+
+당황해서 ~~검색창부터 켰는데~~ 가만 보니 평소에 그냥 `pull` 한 번으로 끝나던 게 갑자기 안 되는 건 결국 **내 브랜치와 원격 브랜치가 다른 길로 갈라졌기 때문**이더라고요. 이참에 `fetch` / `pull` / `fast-forward` / `divergent`가 각각 뭘 의미하는지 정리해뒀습니다.
+
+## 1. 먼저 — git fetch가 정확히 뭘 하는가
+
+한 줄로 말하면 이렇습니다.
+
+> **fetch는 원격 저장소의 변경사항을 _가져오기만_ 하고, 내 브랜치는 건드리지 않는다.**
+
+내 로컬에는 원격 저장소를 그대로 따라다니는 **원격 추적 브랜치(remote-tracking branch)** 라는 게 있습니다. 이름이 `origin/main`, `origin/develop` 같은 거죠. `fetch`는 이걸 최신 상태로 업데이트할 뿐, 내가 작업 중인 `main`은 그대로 둡니다.
+
+```bash
+git fetch origin
+```
+
+그래서 fetch 직후엔 이런 상태가 됩니다.
+
+| 브랜치        | 상태                              |
+| ------------- | --------------------------------- |
+| `main` (로컬) | 내가 마지막에 작업하던 그대로     |
+| `origin/main` | 방금 막 원격에서 받아온 최신 상태 |
+
+이 둘이 같으면 "원격이랑 동기화돼있다"는 뜻이고, 다르면 "원격이 앞서나갔거나 / 내가 앞서나갔거나 / 둘 다 갈라졌다"는 뜻입니다.
+
+## 2. fetch는 언제 쓰면 좋은가
+
+**`pull`을 누르기 전에 한 번 들여다보는 용도로 쓰면 좋습니다.** `pull`은 가져오자마자 내 브랜치에 합쳐버리니까, 합치기 전에 _뭐가 들어왔는지_ 확인하고 싶은 상황에 fetch가 유용합니다.
+
+제가 자주 쓰는 패턴은 이런 식입니다.
+
+```bash
+# 1. 원격 상태만 받아오고
+git fetch origin
+
+# 2. 내 브랜치와 원격 브랜치를 비교해본 다음
+git log --oneline --graph --decorate HEAD origin/main
+
+# 3. 합칠지 / rebase할지 / 그냥 둘지 결정
+```
+
+특히 **장시간 작업하고 있던 feature 브랜치를 원격 main 위로 다시 올릴 때**, 무턱대고 pull/merge부터 하면 의도치 않은 충돌을 한꺼번에 맞게 됩니다. fetch로 먼저 보고 가야 사고가 줄어요.
+
+### 자주 쓰는 옵션
+
+- **`git fetch --prune` (또는 `git fetch -p`)**
+  원격에서 이미 삭제된 브랜치의 추적 브랜치까지 같이 정리해줍니다. 안 쓰면 `origin/feature/old-thing-that-no-longer-exists` 같은 좀비들이 로컬에 계속 쌓입니다.
+
+- **`git fetch --all`**
+  여러 remote를 쓰는 상황(예: `origin` + `upstream`)에서 한 번에 전부 받아옵니다. fork 떠놓고 작업할 때 잘 씁니다.
+
+- **`fetch.prune = true` 설정**
+  매번 `--prune`을 까먹는다면 그냥 디폴트로 박아두면 됩니다.
+
+  ```bash
+  git config --global fetch.prune true
+  ```
+
+- **무엇이 새로 들어왔는지 빠르게 보기**
+
+  ```bash
+  git fetch origin
+  git log HEAD..origin/main --oneline
+  ```
+
+  `HEAD..origin/main`은 *"내 HEAD에는 없고 origin/main에는 있는 커밋들"*이라는 뜻입니다. 반대로 `origin/main..HEAD`로 쓰면 _"내가 push 안 한 커밋들"_ 이 보입니다. 이거 알아두면 push 전에 점검하기 좋습니다.
+
+- **`git fetch`만 쳐도 된다**
+  remote 이름을 생략하면 현재 브랜치가 추적하는 remote에서 받아옵니다. 99%는 그냥 `git fetch`로 충분합니다.
+
+## 3. 그래서 pull은 fetch + 뭐인가
+
+이게 핵심입니다.
+
+> **`git pull` = `git fetch` + `git merge`** _(또는 설정에 따라 `git rebase`)_
+
+즉, `git pull origin main`은 내부적으로 두 단계입니다.
+
+1. `git fetch origin` — 원격 변경사항을 받아와서 `origin/main`을 업데이트
+2. `git merge origin/main` — 그걸 지금 체크아웃된 브랜치에 합치기
+
+여기서 2단계가 어떻게 합쳐지느냐에 따라 결과가 달라지는데, 대부분의 사고는 바로 여기서 일어납니다.
+
+## 4. fast-forward가 뭔데
+
+브랜치를 합치는 방식 중 가장 깔끔한 케이스가 **fast-forward(빨리 감기)** 입니다.
+
+> **내 브랜치 위에 원격이 그냥 _직선상으로_ 더 나아가있을 때, 새 커밋을 만들지 않고 내 브랜치 포인터만 앞으로 밀어주는 방식.**
+
+그림으로 보면:
+
+```text
+fast-forward 가능한 상태 (origin/main이 내 main보다 앞서있고, 갈라짐 없음)
+
+  A --- B --- C  (main, 내 위치)
+              \
+               D --- E  (origin/main)
+
+→ 이 경우 그냥 main 포인터를 E로 옮기면 끝. 머지 커밋도 안 만들어짐.
+
+  A --- B --- C --- D --- E  (main, origin/main)
+```
+
+이게 가능한 조건은 단 하나입니다. **내 브랜치가 원격 브랜치의 *조상*이어야 한다.** 즉, 내가 마지막으로 받아온 시점 이후로 _나는 아무 커밋도 안 했고_, 원격만 앞서나간 상태.
+
+내가 그 사이에 로컬에서 커밋을 하나라도 만들었다면, 그래프가 직선이 아니라 갈라지게 되는데 — 이게 바로 **divergent**입니다.
+
+```text
+divergent 상태 (둘 다 자기 길로 감)
+
+  A --- B --- C --- F --- G  (main, 내 위치 — 내가 로컬에서 F, G 커밋함)
+              \
+               D --- E       (origin/main — 원격은 D, E로 나감)
+```
+
+이 상태에선 fast-forward가 **수학적으로 불가능**합니다. 어느 한쪽으로 포인터를 옮긴다고 다른 쪽 커밋이 따라오지 않으니까요.
+
+## 5. "divergent branches" 메시지의 진짜 의미
+
+자, 그럼 처음에 봤던 그 메시지로 돌아옵니다.
+
+```text
+hint: You have divergent branches and need to specify how to reconcile them.
+hint: You can do so by running one of the following commands sometime before
+hint: your next pull:
+hint:
+hint:   git config pull.rebase false  # merge
+hint:   git config pull.rebase true   # rebase
+hint:   git config pull.ff only       # fast-forward only
+fatal: Need to specify how to reconcile divergent branches.
+```
+
+이게 뜨는 이유를 풀어쓰면:
+
+1. 내 브랜치와 원격 브랜치가 **divergent** 상태다 (둘 다 각자 커밋이 있음).
+2. 그래서 fast-forward로는 못 합친다.
+3. fast-forward가 안 되는 상황에서 git이 **자동으로 merge할지 rebase할지** 결정해버리지 않는다 (Git 2.27부터 정책이 바뀌어서, 명시 안 하면 그냥 멈춤).
+4. 너 직접 골라.
+
+즉 에러가 아니라 **"세 가지 중에 골라"** 라고 묻는 겁니다. <span className="text-red-500 font-bold">에러처럼 보이지만 사실은 질문</span>이에요.
+
+## 6. 그래서 뭘 골라야 하는가 — 세 가지 옵션
+
+git이 제시하는 세 옵션을 정리하면 이렇습니다.
+
+| 옵션        | 설정                | 결과                                                  | 언제 쓰는가                                             |
+| ----------- | ------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
+| **merge**   | `pull.rebase false` | divergent일 때 머지 커밋 만들어서 합침                | 공유 브랜치, 히스토리 보존이 중요할 때                  |
+| **rebase**  | `pull.rebase true`  | 내 커밋을 원격 위로 다시 쌓아서 직선 히스토리로 만듦  | 내 로컬 작업 브랜치, 깔끔한 히스토리를 선호할 때        |
+| **ff only** | `pull.ff only`      | fast-forward 가능한 경우에만 pull. 안 되면 그냥 거절. | "내가 모르는 합치기는 절대 자동으로 하지 마" 정책 쓸 때 |
+
+### 일회성으로 그때만 쓰고 싶다면
+
+설정 안 건드리고 명령어 옵션으로 즉시 처리할 수도 있습니다.
+
+```bash
+git pull --rebase origin main      # 이번만 rebase
+git pull --no-rebase origin main   # 이번만 merge
+git pull --ff-only origin main     # 이번만 fast-forward only
+```
+
+### 제가 쓰는 기본값
+
+저는 개인 브랜치에서는 `rebase`, 공유 브랜치(`main`, `develop` 같은)에서는 `merge`가 더 나은 것 같습니다.. 생각하는건 다 비슷한것 같아서 찾아보니 다른 분들도 비슷하게 하시것 같더라고요.
