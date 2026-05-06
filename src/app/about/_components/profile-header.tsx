@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Mail } from "lucide-react";
 import { siteConfig } from "@/shared/config";
 import { GithubIcon } from "@/shared/ui";
@@ -5,8 +6,15 @@ import { GithubIcon } from "@/shared/ui";
 export function ProfileHeader() {
   return (
     <header className="flex flex-col items-center gap-5 py-10 text-center sm:flex-row sm:gap-6 sm:text-left">
-      <div className="border-border bg-muted text-muted-foreground flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border text-3xl font-semibold">
-        G
+      <div className="border-border relative aspect-3/4 w-32 shrink-0 overflow-hidden rounded-lg border sm:w-36">
+        <Image
+          src="/profile.jpg"
+          alt="조건호 프로필 사진"
+          fill
+          sizes="(min-width: 640px) 144px, 128px"
+          className="object-cover"
+          priority
+        />
       </div>
       <div className="flex flex-col items-center gap-1.5 sm:items-start">
         <h1 className="text-2xl font-bold tracking-tight">조건호</h1>
