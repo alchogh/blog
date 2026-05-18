@@ -1,0 +1,329 @@
+---
+title: "번들 줄여서 최적화하기"
+summary: "lazy가 안 먹는 세 가지 — 배럴, manualChunks, dynamic-subset"
+date: 2026-05-11
+category: "deep-dive"
+tags: ["vite", "bundle", "code-splitting", "web-font", "performance"]
+draft: false
+---
+
+> [!NOTE] 의심해야 할 세 가지
+> Vite + React SPA에서 `React.lazy()`를 다 걸었는데도 다른 라우터 코드가 같이 떨어진다면, 범인은 보통 둘 — _배럴 `index.ts`가 page를 re-export하는 것_ 또는 _`manualChunks`의 의미별 묶음_. 거기에 한국어 웹폰트 `dynamic-subset`을 같이 쓰면 다운로드량은 줄어도 요청 수가 오히려 폭증합니다. 셋 다 직접 밟아본 기록입니다.
+
+회사 SPA 하나가 너무 무거워서 번들 최적화를 시작했습니다. 아래는 최적화 전입니다..
+
+| 지표                    | 값                 |
+| ----------------------- | ------------------ |
+| `dist/` 전체            | 5.0 MB             |
+| JS 청크                 | 1.8 MB (총 50개)   |
+| 폰트                    | 800 KB (woff2 3개) |
+| 이미지                  | 460 KB (PNG 5개)   |
+| 첫 페이지 네트워크 요청 | ~50개              |
+
+번들을 최적화하는데는 여러가지 방법이 있습니다.
+
+- 트리쉐이킹 (`sideEffects: false`)
+- lazy import / 라우트 코드 스플리팅
+- vendor 청크 분리 (`manualChunks`)
+- 이미지 포맷 교체 (PNG → WebP/AVIF)
+- 폰트 서브셋 / preload
+- preload·prefetch hint 튜닝
+
+이 중 가장 먼저 떠오르는 게 lazy니까, 라우터마다 `React.lazy()`를 걸었습니다. 빌드해보니 페이지별 청크 파일이 잘 떨어지길래 "됐겠지" 하고 넘어갔습니다. ~~그리고 뭐 코드를 짜는데 어려운 것도 아니였으니까~~.
+
+근데 **로그인 페이지 로딩 시 다른 페이지에서 쓰는 라이브러리가 같이 떨어지고 있는 현상을 발견했습니다.** /페이지에서 다른 페이지에 쓰이는 라이브러리를 가져오는 것도 마찬가지였습니다.
+
+알아보니 크게 3가지가 문제였습니다.
+
+- **배럴 `index.ts`가 page를 re-export하는 것**
+- **`manualChunks`의 의미별 묶음**
+- **한국어 웹폰트의 `dynamic-subset` 옵션**
+
+## 1. 함정 1 — 배럴 `index.ts`가 lazy 경계를 깬다
+
+### 왜 안됐지?
+
+저는 웬만하면 각 폴더안에 index.ts를 만들어 뎁스를 줄이는 배럴 패턴을 씁니다.
+라우터엔 `React.lazy()`로 코드 스플리팅을 다 걸어 뒀는데도, 네트워크 탭에선 `/`을 렌더링하면 다른 페이지들과 함수들을 같이 렌더링하고 있었습니다.
+
+### 누가 배럴을 끌어쓰지
+
+```ts
+// src/features/dashboard/page.tsx
+import { useMe } from "@/features/auth";
+```
+
+훅 하나만 받아 쓰는 그냥저냥한 import. 근데 따라가보면 경로가 이렇게 됩니다.
+
+`@/features/auth` → `features/auth/index.ts`:
+
+```ts
+export * from "./login";
+export * from "./signup"; // ← 이게 결정타
+export * from "./me";
+export * from "./constants";
+```
+
+`./signup`을 또 따라가면:
+
+```ts
+// features/auth/signup/index.ts
+export * from "./page"; // ← SignupPage가 같이 끌려나옴
+export * from "./components";
+export * from "./queries";
+```
+
+> [!NOTE]
+> JavaScript는 `index.ts`를 **온전하게 실행하기 위해**, 그 안에 링크된 `SignupPage`·`LoginPage` 같은 **모든 파일의 코드를 즉시 평가하고 가져옵니다.**
+>
+> 💡 그래서 특정 페이지 하나만 lazy하게 받으려고 배럴(`index.ts`)에 들어오면, 배럴안에 있던 **다른 페이지 컴포넌트까지 모두 렌더링을 하게 됩니다.** 코드 스플리팅이 작동하지 않게 됩니다.
+
+이번 경우엔 **Dashboard 청크 안에 SignupPage 모듈이 그대로 렌더링됩니다.** SignupPage가 끌고 다니는 form 라이브러리, validation 스키마, 자체 컴포넌트까지 같이 렌더링됩니다.
+
+### 트리쉐이킹은 왜 못 떨궈내나
+
+`import { useMe } from '@/features/auth'`는 번들러 입장에선 _"`features/auth` 모듈을 평가해서 그중 `useMe`만 꺼내 써라"_ 입니다. 평가하면 `export *`로 늘어놓은 모듈이 한 번씩 다 import됩니다. 그중 안 쓰는 건 트리쉐이킹으로 떨궈내야 정상인데, 페이지 모듈은 떨궈내기가 어렵습니다.
+
+- 페이지 모듈은 보통 `import './styles.css'` 같은 side effect를 들고 다닙니다
+- 상위에서 form·validation 같은 페이지 전용 라이브러리를 정적으로 import해뒀습니다
+- React 컴포넌트 모듈 자체도 번들러가 "안 쓰면 떼도 안전"이라고 확신하기 어려운 형태입니다
+
+> [!IMPORTANT] 빌드 산출물만 보면 속는 부분
+> 라우터에 `lazy(() => import('@/features/auth/signup/page'))`를 걸어두면 `signup-page-XX.js` 청크 파일이 빌드 결과에 떨어집니다. 근데 같은 모듈이 dashboard 청크에 박혀 있는 상태라면, signup으로 이동할 때 받는 청크가 가벼워질 뿐 dashboard 진입 비용은 그대로입니다. _빌드 산출물에 청크 파일이 생긴 것_ 과 _브라우저가 그 청크만 받는 것_ 은 다른 얘기입니다.
+
+### 해결 — page는 배럴에 두지 않는다
+
+수정은 한 줄이면 됩니다.
+
+```diff
+// features/auth/signup/index.ts
+- export * from './page';
+  export * from './components';
+  export * from './queries';
+```
+
+깔끔한 import를 위해 배럴 패턴을 사용했는데 오히려 이 부분때문에 코드스플리팅이 되지 않을거라는 생각을 하지 못했습니다. 아무 생각없이 page.tsx도 넣어야지하고 그냥 코드를 짰습니다.
+~~어짜피 page.tsx는 라우터에 밖에 쓰지 않아서 넣을필요도 없었는데.~~
+
+당연한 것을 당연하지 않게 생각하는 습관을 길러야 할것같습니다.
+
+> [!TIP] 배럴에 뭘 넣어도 되나
+>
+> - ✅ `export { useFoo } from './hooks'` — pure hook
+> - ✅ `export type { FooDTO } from './types'` — 타입은 런타임 영향 없음
+> - ❌ `export * from './page'` — 페이지 컴포넌트. lazy 경계 침범
+> - ❌ `export * from './styles.css'` — CSS side effect 강제 주입
+>
+> "한 폴더 안에 있는 건 다 `index.ts`에 노출하는 게 깔끔하지" 라는 직감이 가장 위험합니다. 배럴은 _cross-feature 경계_ 라서, 그 경계로 새면 안 될 것(page·side-effect 모듈)과 자유롭게 다녀도 되는 것(hook·type)을 의식적으로 구분해야 lazy가 살아남습니다.
+
+## 2. 함정 2 — `manualChunks`가 코드 스플리팅을 다시 무력화한다
+
+배럴에서 page를 빼고 나니 페이지 _자체_ 의 코드는 정리됐는데, 네트워크 탭엔 또 다른 큰 청크가 계속 따라붙고 있었습니다. 이번엔 vendor 쪽.
+
+페이지마다 청크는 잘 분리되어 있습니다.
+
+```text
+dist/assets/page-DxW9xMzb.js   3.89 kB
+dist/assets/page-HF1Y06G0.js   4.09 kB
+dist/assets/page-BaPaGzwP.js   4.50 kB
+...
+```
+
+근데 어느 페이지를 들어가도 따라오는 큰 파일이 하나 있었습니다.
+
+```text
+utils-vendor-BovN-_R9.js   212.34 kB  gzip: 66.96 kB
+```
+
+이름은 "유틸 모음"인데 까보니까 chat 화면에서만 쓰는 마크다운 렌더러가 들어 있었습니다. 로그인 페이지가 마크다운 그릴 일도 없는데 매번 같이 받고 있었던 셈입니다.
+
+### `vite.config.ts`가 범인
+
+```ts
+build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        'react-vendor':   ['react', 'react-dom'],
+        'router-vendor':  ['react-router-dom'],
+        'state-vendor':   ['@tanstack/react-query'],
+        'ui-vendor':      ['@headlessui/react', 'sonner', 'clsx', /* ... */],
+        'form-vendor':    ['react-hook-form', '@hookform/resolvers', 'zod'],
+        'utils-vendor':   ['axios', 'date-fns', 'react-markdown', 'remark-gfm'],
+      },
+    },
+  },
+},
+```
+
+`utils-vendor`에 네 개가 묶여 있는데 각자 어디서 쓰는지 보면 아래와 같습니다.
+
+| 라이브러리       | 실제 사용처                         |
+| ---------------- | ----------------------------------- |
+| `axios`          | API instance 1개 (entry에서 import) |
+| `date-fns`       | 훅 1개                              |
+| `react-markdown` | chat 화면 2곳에서만                 |
+| `remark-gfm`     | 위와 동일                           |
+
+`axios`는 entry chunk가 직접 import합니다. 모든 페이지가 fetch 하니까 당연한 일입니다. 근데 그 axios가 `utils-vendor`에 `react-markdown`이랑 한 묶음으로 들어 있으니, Rollup 입장에선 _"entry가 utils-vendor를 의존한다"_ 가 됩니다. 결과적으로 모든 라우터 진입 시 `utils-vendor` 212KB가 따라옵니다. lazy로 미루려던 react-markdown 포함.
+
+> [!IMPORTANT] `manualChunks`가 하는 일
+> `manualChunks`는 _"이 라이브러리들을 같은 파일 하나에 넣어라"_ 라는 **그룹핑 명령**입니다. _언제 로드될지_ 를 정하는 명령이 아닙니다. 청크가 언제 로드되는지는 의존성 그래프가 정합니다. entry에서 import되는 모듈이 청크 안에 하나라도 있으면, 그 청크는 전체가 entry의 동기 의존성으로 승격됩니다. 안에 있는 다른 라이브러리들이 lazy 너머에 있든 말든 같이 끌려나갑니다.
+
+그림으로 그리면:
+
+```text
+entry ──import──► axios
+                    │
+                    └─ 같은 청크(utils-vendor)에 묶임
+                       │
+                       ├─ date-fns       (entry 의존 아님 → 그래도 같이 로드)
+                       ├─ react-markdown (chat 페이지 전용 → 그래도 같이 로드)
+                       └─ remark-gfm     (chat 페이지 전용 → 그래도 같이 로드)
+```
+
+같은 청크에 묶은 순간 같이 사는 셈입니다. `React.lazy()`로 import를 미뤄도 같은 청크에 entry 의존이 하나만 있으면 lazy 경계는 그 자리에서 무너집니다.
+
+### 해결 — 묶는 기준을 바꾼다
+
+```ts
+manualChunks: {
+  'react-vendor':    ['react', 'react-dom'],
+  'router-vendor':   ['react-router-dom'],
+  'state-vendor':    ['@tanstack/react-query'],
+  'ui-vendor':       ['@headlessui/react', 'sonner', 'clsx', /* ... */],
+  'form-vendor':     ['react-hook-form', '@hookform/resolvers', 'zod'],
+  // utils-vendor 해체
+  'markdown-vendor': ['react-markdown', 'remark-gfm'],
+  'tiptap-vendor':   ['@tiptap/react', '@tiptap/starter-kit', /* ... */],
+  // axios, date-fns는 자동 분할에 맡김
+},
+```
+
+원칙 두 개:
+
+1. **`manualChunks`에 묶는 건 _모든 페이지에서 같이 쓰는_ 것들로만.** react, router, query, ui 시스템처럼 진짜 공통 의존성.
+2. **특정 라우터에서만 쓰는 무거운 라이브러리는 별도 vendor로 떼둔다.** lazy 경계도 살리고, 캐시 효율(그 라이브러리만 바뀌면 그 청크만 재배포)도 같이 챙김.
+
+`react-markdown` + `remark-gfm`은 `markdown-vendor`로, Tiptap 묶음은 `tiptap-vendor`로 분리. 이제 chat 진입 시에만 markdown-vendor가, canva editor 진입 시에만 tiptap-vendor가 떨어집니다.
+
+| 청크                                   | Before               | After                  |
+| -------------------------------------- | -------------------- | ---------------------- |
+| `utils-vendor` (모든 페이지 강제 로드) | 212 KB / gzip 67 KB  | **사라짐**             |
+| `markdown-vendor` (chat 진입 시에만)   | —                    | 157 KB / gzip 47 KB    |
+| `canva-editor` 페이지 청크             | 599 KB / gzip 204 KB | 43 KB (앱 코드만 남음) |
+| `tiptap-vendor` (canva 진입 시에만)    | —                    | 557 KB / gzip 189 KB   |
+
+비슷한 숫자처럼 보여도 의미는 완전 다른데:
+
+- 로그인·대시보드 같은 가벼운 페이지에서 받는 양이 gzip 기준 67KB 줄어듭니다
+- tiptap이 그대로면 재배포해도 `tiptap-vendor`가 그대로 캐시 재활용됨
+
+> [!CAUTION] vendor 청크 만들 때
+> _"라이브러리들을 카테고리로 묶어서 깔끔하게 정리해야지"_ — 이 직감이 함정입니다.
+>
+> - ❌ `utils-vendor: [axios, date-fns, react-markdown]` — "유틸"이라는 _의미적 묶음_. 로딩 타이밍 무시.
+> - ✅ `markdown-vendor: [react-markdown, remark-gfm]` — _같이 로드되어야 하는 것_ 끼리 묶음.
+>
+> 이름이 그럴듯하다는 이유로 묶으면 그 안에서 가장 먼저 로드되는 녀석이 나머지 전부를 entry까지 끌고 올라옵니다.
+
+## 3. 함정 3 — `dynamic-subset` 폰트가 요청 수를 폭증시킨다
+
+vendor까지 정리하고 폰트 쪽을 최적화 했습니다. **다운로드 무게는 줄었는데 네트워크 탭 라인 수는 늘어나는** 케이스입니다.
+
+원래는 Pretendard 한국어 폰트를 Regular / Medium / Bold 세 weight로 self-host하고 있었습니다.
+
+```text
+Pretendard-Regular.subset.woff2   264 KB
+Pretendard-Medium.subset.woff2    264 KB
+Pretendard-Bold.subset.woff2      268 KB
+                                  -------
+                                  800 KB
+```
+
+이걸 줄여보려고 `pretendard` npm 패키지의 `dynamic-subset` 빌드로 교체했습니다.
+
+```ts
+// before
+import "./pretendardvariable.css"; // 자체 작성 @font-face
+
+// after
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+```
+
+`dynamic-subset`은 한국어 음절·자모를 `unicode-range` 단위로 잘게 쪼개서 **92개의 woff2 청크**로 배포해놓은 빌드입니다. 각 청크는 30~45KB.
+
+```css
+@font-face {
+  font-family: "Pretendard Variable";
+  src: url(./woff2-dynamic-subset/PretendardVariable.subset.0.woff2) format("woff2-variations");
+  unicode-range: U+f9ca-fa0b, U+ff03-ff05, /* ... */;
+}
+/* @font-face 91개 더 */
+```
+
+> [!TIP] `dynamic-subset`의 셀링 포인트
+> 브라우저는 페이지에 _실제로 등장한 글자_ 의 unicode에 매칭되는 청크만 요청합니다. 한 화면에 나오는 글자가 제한적이니까 몇 개만 받아도 충분하다 — 라는 게 이 빌드의 핵심 아이디어입니다.
+
+### 근데 실제로 받아보니
+
+용량은 실제로 줄어듭니다. 첫 페이지 폰트 다운로드량이 800KB → 200KB 수준으로 떨어집니다.
+
+**그 대신 폰트 요청이 30~50개씩 깔립니다.**
+
+```text
+PretendardVariable.subset.0.woff2    38 KB
+PretendardVariable.subset.2.woff2    43 KB
+PretendardVariable.subset.3.woff2    40 KB
+PretendardVariable.subset.18.woff2   41 KB
+PretendardVariable.subset.23.woff2   40 KB
+... (계속)
+```
+
+한국어는 자모 조합이 너무 다양해서 평범한 페이지 한 장에도 매칭되는 `unicode-range`가 수십 개 잡힙니다. 거기에 본문/볼드가 섞이면 같은 unicode라도 weight 별로 폰트를 다시 잡으니까 곱하기가 됩니다.
+
+`dynamic-subset`은 라틴 알파벳 기반 폰트에는 유리합니다 (글자 종류 자체가 적으니까). 근데 한국어에는 청크 수가 폭증하기 쉬운 구조입니다.
+
+### 옵션 셋 비교
+
+| 옵션                                | 첫 페이지 다운로드 | 요청 수     | 재방문 캐시        | 코드 변경    |
+| ----------------------------------- | ------------------ | ----------- | ------------------ | ------------ |
+| **A. Variable Font 단일 파일**      | ~1.3 MB (한 번)    | **1개**     | 매우 좋음 (0 요청) | import 한 줄 |
+| **B. 통합 subset 3 weight** (원래)  | ~800 KB            | **3개**     | 좋음               | —            |
+| **C. dynamic-subset** (적용했던 것) | ~200 KB            | **30~60개** | 페이지별 다름      | —            |
+
+블로그·관리툴처럼 같은 사람이 여러 번 방문하는 사이트라면 **A가 압도적**입니다. 첫 방문 1.3MB만 한 번 받고 그 다음부턴 캐시에서 끝.
+
+반대로 일회성 랜딩 페이지처럼 첫 방문 무게가 절대적인 곳은 C가 더 나을 수도 있습니다. 200KB가 1.3MB보다 가볍긴 하니까.
+
+### 결론 — Variable Font 단일 파일로
+
+이번 프로젝트는 사내 관리툴이라 재방문이 많고, HTTP/1.1 환경의 모바일 브라우저에서 50개 요청이 직렬화되는 체감이 안 좋았습니다. A로 다시 옮겼습니다.
+
+```ts
+// 최종
+import "pretendard/dist/web/variable/PretendardVariable.css";
+```
+
+요청 수: 50개대 → **1개.** 다운로드량은 한 번 받고 캐시에 들어가니까 누적 시간 기준으로는 훨씬 빠릅니다.
+
+> [!WARNING] 한국어 사이트에서 `dynamic-subset` 검토 중이라면
+> 일단 _내 사이트의 방문 패턴_ 부터 따져봐야 합니다. 첫 방문 가벼움 vs 재방문 캐시 효율 — 둘 중에 뭐가 더 중요한지에 따라 답이 갈립니다. 무조건 작게 쪼개진 게 좋은 건 아닌 것 같습니다.
+
+## 4. 나머지 최적화
+
+- **SVG 42개 → 스프라이트화** — `<Icon name="..." />`가 `mask-image: url('/assets/xxx.svg')` 방식이라 아이콘 하나마다 HTTP 요청이 떨어지고 있었습니다. `vite-plugin-svg-icons`로 SVG들을 `<symbol>` 모음 한 덩이로 묶고, 페이지에서는 `<svg><use href="#icon-name"/></svg>`로 참조하는 스프라이트 방식으로 바꿨습니다. entry에 `import 'virtual:svg-icons-register'` 한 줄 추가로 끝. entry chunk가 약간 늘어나는 대가로 **HTTP 요청 42개가 사라졌습니다.**
+- **PNG → WebP** — 미리보기 이미지 5장 460KB → 124KB. `cwebp -q 80`로 일괄 변환. 73% 감소.
+- **Tiptap chunk 분리** — 위 함정 2에서 다룬 케이스. canva editor 진입 시에만 tiptap이 로드되도록.
+
+## 5. 정리
+
+| 함정                             | 증상                                                     | 원인                                                                                                                                             | 해결                                                                                                 |
+| -------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| **배럴 `index.ts`가 page 노출**  | 한 페이지 청크 안에 다른 라우터 페이지 코드가 같이 박힘  | feature 배럴이 `export * from './page'`로 페이지 컴포넌트를 노출. 누군가 배럴에서 hook 하나만 가져가도 page 모듈이 평가되며 청크에 묶여 들어감   | 배럴에서 page export 제거. 페이지·side-effect 모듈은 배럴 밖에 두고, lazy 라우터는 `/page` 직격 경로 |
+| **`manualChunks` 잘못 묶기**     | lazy 했는데 모든 라우터에서 같은 큰 vendor 청크가 로드됨 | 의미별 그룹핑(`utils-vendor`)에 entry 의존 라이브러리(`axios`)와 lazy 의존 라이브러리(`react-markdown`)가 섞여서 청크 전체가 entry 의존으로 승격 | vendor 청크는 _동시에 로드되어야 하는 것_ 끼리만. 라우터 전용 라이브러리는 별도 vendor로 분리        |
+| **`dynamic-subset` 한국어 폰트** | 폰트 다운로드량은 줄었는데 네트워크 요청이 30~50개 발생  | 한국어 unicode-range 매칭이 워낙 많고, weight마다 곱하기                                                                                         | 재방문 위주 사이트는 Variable Font 단일 파일. _요청 수 vs 다운로드량_ 트레이드오프를 의식적으로 선택 |
+
+- 배럴 `index.ts`에 page를 export하면 lazy 경계가 깨집니다. page는 배럴에서 빼야 합니다.
+- `manualChunks`는 라이브러리를 그룹핑할 뿐, 로딩 타이밍은 의존성 그래프가 정합니다. entry 의존 라이브러리와 lazy 의존 라이브러리를 같이 묶지 말 것.
+- `dynamic-subset`은 한국어에서 woff2 청크를 92개로 쪼갭니다. 다운로드량은 줄지만 요청 수가 폭증합니다.
