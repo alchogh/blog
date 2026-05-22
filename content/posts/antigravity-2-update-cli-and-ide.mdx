@@ -1,0 +1,49 @@
+---
+title: "Antigravity 2.0 업데이트: CLI와 IDE 명령어의 분리"
+summary: "Antigravity 2.0 업데이트 이후 agy . 실행 시 에디터 대신 CLI가 켜지는 현상의 원인과 해결법 정리"
+date: 2026-05-22
+category: "tooling"
+tags: ["antigravity", "cli", "ide", "troubleshooting"]
+draft: false
+---
+
+> [!IMPORTANT] 요약
+> - **`agy`**: 이제 에이전트 CLI 도구(바이너리)로 작동합니다.
+> - **`agy-ide`**: Antigravity IDE(GUI 창)를 실행하는 명령어입니다.
+> - 이전처럼 터미널에서 에디터 GUI를 열려면 `agy .` 대신 **`agy-ide .`**를 사용해야 합니다.
+
+---
+
+## 1. 발생한 현상
+
+프로젝트 디렉토리에서 원래 사용하던 대로 `agy .`를 실행했으나, 익숙한 IDE(GUI) 창이 열리지 않고 터미널 기반 CLI 세션이 실행되거나 폴더 선택 창으로 튕기는 현상이 발생합니다.
+
+---
+
+## 2. 원인 분석
+
+Antigravity 2.0 업데이트로 인해 독립형 IDE와 코어 Antigravity 플랫폼이 서로 다른 제품으로 분리되었습니다. 이에 따라 터미널 명령어 체계 또한 변경되었습니다.
+
+- **이전**: `agy` 명령어가 `/Applications/Antigravity.app`의 실행 스크립트를 가리켰기에 `agy .`만으로 IDE 실행이 가능했습니다.
+- **현재**: `agy`는 1.0.0 버전으로 정식 릴리즈된 에이전트 CLI 바이너리입니다. IDE GUI 창을 띄우려면 새 명령어인 `agy-ide`를 호출해야 합니다.
+- **인자 요구**: `agy-ide`는 VS Code CLI 기반으로 동작하므로, 현재 폴더를 열기 위해서는 뒤에 명시적으로 경로 인자(`.`)를 붙여주어야 합니다. `agy-ide` 단독으로 실행하면 최상위 폴더 선택 창이 뜹니다.
+
+---
+
+## 3. 해결 방법
+
+### 해결책 A. 명령어 변경
+터미널에서 아래 명령어를 실행하여 프로젝트 폴더를 엽니다.
+```bash
+agy-ide .
+```
+
+### 해결책 B. 단축어(Alias) 등록
+매번 `agy-ide .`를 입력하는 것이 번거롭다면, 쉘 설정 파일(`.zshrc` 등)에 단축어(alias)를 추가하여 사용합니다.
+
+```bash
+# ~/.zshrc 에 추가
+alias agi="agy-ide ."
+```
+
+설정 반영 후 터미널에 `agi`만 입력하면 현재 디렉토리가 로드된 IDE GUI 창이 바로 열립니다.
