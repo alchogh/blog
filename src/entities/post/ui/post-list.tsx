@@ -4,7 +4,7 @@ import { PostCard } from "./post-card";
 interface PostListProps {
   posts: Post[];
   empty?: string;
-  views?: Map<string, number>;
+  views?: Record<string, number>;
 }
 
 export function PostList({
@@ -21,7 +21,7 @@ export function PostList({
         <PostCard
           key={post.slug}
           post={post}
-          views={views ? (views.get(post.slug) ?? 0) : undefined}
+          views={views ? (views[post.slug] ?? 0) : undefined}
         />
       ))}
     </div>
