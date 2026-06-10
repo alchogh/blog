@@ -1,9 +1,4 @@
-export const POST_CATEGORIES = [
-  "typescript",
-  "deep-dive",
-  "react",
-  "tooling",
-] as const;
+export const POST_CATEGORIES = ["typescript", "deep-dive", "react", "tooling", "backend"] as const;
 
 export type PostCategory = (typeof POST_CATEGORIES)[number];
 
@@ -12,6 +7,7 @@ export const CATEGORY_LABELS: Record<PostCategory, string> = {
   "deep-dive": "Deep Dive",
   react: "React",
   tooling: "Tooling",
+  backend: "Backend",
 };
 
 const AUTHOR_HANDLE = "geonoooo";

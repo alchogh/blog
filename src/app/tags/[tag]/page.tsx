@@ -5,6 +5,7 @@ import {
   getPostsByTag,
   PostList,
 } from "@/entities/post";
+import { getPostViews } from "@/entities/stats";
 import { Container } from "@/shared/ui";
 
 interface TagPageProps {
@@ -30,6 +31,8 @@ export default async function TagPage({ params }: TagPageProps) {
   const posts = getPostsByTag(tag);
   if (posts.length === 0) notFound();
 
+  const views = await getPostViews().catch(() => undefined);
+
   return (
     <Container>
       <div className="pb-8">
@@ -38,7 +41,7 @@ export default async function TagPage({ params }: TagPageProps) {
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">#{tag}</h1>
       </div>
-      <PostList posts={posts} />
+      <PostList posts={posts} views={views} />
     </Container>
   );
 }

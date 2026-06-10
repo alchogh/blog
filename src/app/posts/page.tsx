@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAllPosts, PostCategoryFilter, PostList } from "@/entities/post";
+import { getPostViews } from "@/entities/stats";
 import { Container } from "@/shared/ui";
 
 export const metadata: Metadata = {
@@ -7,13 +8,14 @@ export const metadata: Metadata = {
   description: "All posts.",
 };
 
-export default function PostsPage() {
+export default async function PostsPage() {
   const posts = getAllPosts();
+  const views = await getPostViews().catch(() => undefined);
 
   return (
     <Container>
       <PostCategoryFilter />
-      <PostList posts={posts} />
+      <PostList posts={posts} views={views} />
     </Container>
   );
 }

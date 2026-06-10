@@ -5,7 +5,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import remarkGfm from "remark-gfm";
 import { remarkAlert } from "remark-github-blockquote-alert";
 
-const POST_CATEGORIES = ["typescript", "deep-dive", "react", "tooling"] as const;
+const POST_CATEGORIES = ["typescript", "deep-dive", "react", "tooling", "backend"] as const;
 
 const posts = {
   name: "Post",
