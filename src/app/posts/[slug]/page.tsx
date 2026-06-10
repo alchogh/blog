@@ -9,6 +9,7 @@ import {
   PostHeader,
   PostNavigation,
 } from "@/entities/post";
+import { PostViewTracker } from "@/entities/stats";
 import { siteConfig } from "@/shared/config";
 import { Container } from "@/shared/ui";
 
@@ -97,6 +98,7 @@ export default async function PostPage({ params }: PostPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <PostViewTracker slug={slug} />
       <PostHeader post={post} />
       <PostBody code={post.body} />
       <PostComments slug={slug} />

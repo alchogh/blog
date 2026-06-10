@@ -1,0 +1,17 @@
+import "server-only";
+import { unstable_cache } from "next/cache";
+import { getSupabaseAdmin } from "@/shared/lib/supabase";
+
+async function fetchPostViews(): Promise<Map<string, number>> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.rpc("get_post_views");
+  if (error) throw error;
+
+  const rows = (data ?? []) as { slug: string; count: number }[];
+  return new Map(rows.map((row) => [row.slug, Number(row.count ?? 0)]));
+}
+
+export const getPostViews = unstable_cache(fetchPostViews, ["post-views"], {
+  revalidate: 60,
+  tags: ["post-views"],
+});
