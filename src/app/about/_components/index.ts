@@ -4,3 +4,4 @@ export * from "./experience-section";
 export * from "./intro";
 export * from "./principles-section";
 export * from "./profile-header";
+export * from "./skills-section";

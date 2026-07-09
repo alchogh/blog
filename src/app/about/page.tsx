@@ -7,6 +7,7 @@ import {
   Intro,
   PrinciplesSection,
   ProfileHeader,
+  SkillsSection,
 } from "./_components";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function AboutPage() {
       <ProfileHeader />
       <div className="space-y-14 pb-20">
         <Intro />
+        <SkillsSection />
         <PrinciplesSection />
         <ExperienceSection />
         <BootcampSection />
