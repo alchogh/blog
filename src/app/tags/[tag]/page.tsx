@@ -34,7 +34,7 @@ export default async function TagPage({ params }: TagPageProps) {
   const views = await getPostViews().catch(() => undefined);
 
   return (
-    <Container>
+    <Container size="wide">
       <div className="pb-8">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           Tag

@@ -17,6 +17,8 @@ const posts = {
       date: s.isodate(),
       category: s.enum(POST_CATEGORIES),
       tags: s.array(s.string()).default([]),
+      // 실제 스크린샷·로고를 쓰고 싶은 글만 넣는다. 없으면 자동 커버로 대체.
+      thumbnail: s.image().optional(),
       draft: s.boolean().default(false),
       slug: s.path(),
       permalink: s.path(),

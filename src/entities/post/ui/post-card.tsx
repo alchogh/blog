@@ -1,9 +1,9 @@
 import { Eye } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import type { Post } from "../model";
 import { PostCategoryBadge } from "./post-category-badge";
 import { PostMeta } from "./post-meta";
-import { PostTagBadge } from "./post-tag-badge";
 
 interface PostCardProps {
   post: Post;
@@ -11,8 +11,30 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, views }: PostCardProps) {
+  // frontmatter thumbnail이 있으면 그 이미지를, 없으면 카테고리 자동 커버를 쓴다.
+  const thumbnail = post.thumbnail;
+  const src = thumbnail?.src ?? `/posts/${post.slug}/thumbnail`;
+
   return (
-    <article className="group flex flex-col gap-2 border-b border-border py-6 last:border-b-0">
+    <article className="group flex flex-col gap-3">
+      <Link
+        href={post.permalink}
+        aria-hidden
+        tabIndex={-1}
+        className="relative block aspect-16/10 overflow-hidden rounded-xl border border-border"
+      >
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 100vw, 480px"
+          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          {...(thumbnail?.blurDataURL
+            ? { placeholder: "blur" as const, blurDataURL: thumbnail.blurDataURL }
+            : {})}
+        />
+      </Link>
+
       <div className="flex items-center gap-2">
         <PostCategoryBadge category={post.category} asLink />
         <PostMeta date={post.date} readingTime={post.metadata.readingTime} />
@@ -23,19 +45,15 @@ export function PostCard({ post, views }: PostCardProps) {
           </span>
         )}
       </div>
-      <Link href={post.permalink} className="mt-1 block">
-        <h2 className="text-xl font-semibold tracking-tight transition-colors group-hover:text-muted-foreground">
+
+      <Link href={post.permalink} className="block">
+        <h2 className="text-lg font-semibold tracking-tight transition-colors group-hover:text-muted-foreground">
           {post.title}
         </h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">{post.summary}</p>
+        <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
+          {post.summary}
+        </p>
       </Link>
-      {post.tags.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-          {post.tags.map((tag) => (
-            <PostTagBadge key={tag} tag={tag} />
-          ))}
-        </div>
-      )}
     </article>
   );
 }

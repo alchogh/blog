@@ -13,7 +13,7 @@ export default async function PostsPage() {
   const views = await getPostViews().catch(() => undefined);
 
   return (
-    <Container>
+    <Container size="wide">
       <PostCategoryFilter />
       <PostList posts={posts} views={views} />
     </Container>

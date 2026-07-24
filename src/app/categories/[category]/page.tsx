@@ -40,7 +40,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const views = await getPostViews().catch(() => undefined);
 
   return (
-    <Container>
+    <Container size="wide">
       <PostCategoryFilter active={category} />
       <PostList
         posts={posts}

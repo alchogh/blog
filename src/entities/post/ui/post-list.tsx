@@ -16,7 +16,7 @@ export function PostList({
     return <p className="py-8 text-sm text-muted-foreground">{empty}</p>;
   }
   return (
-    <div className="flex flex-col">
+    <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2">
       {posts.map((post) => (
         <PostCard
           key={post.slug}

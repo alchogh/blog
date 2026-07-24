@@ -7,7 +7,7 @@ export default function HomePage() {
   const posts = getAllPosts();
 
   return (
-    <Container>
+    <Container size="wide">
       <section className="pt-6">
         <div className="mb-2 flex items-center justify-between">
           <Link
