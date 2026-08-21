@@ -211,11 +211,8 @@ function CategoryGlyph({
 
 // 목록 카드용 자동 커버. 카드에 제목이 이미 있으니 이미지엔 글자를 넣지 않고
 // 카테고리 색 + 아이콘만으로 서로 달라 보이게 한다. (frontmatter thumbnail이
-// 있으면 카드가 이 이미지 대신 그 이미지를 쓴다.)
-export async function createPostThumbnailImage(
-  post: Post,
-): Promise<ImageResponse> {
-  const options = await fontOptions();
+// 있으면 카드가 이 이미지 대신 그 이미지를 쓴다.) 텍스트가 없으니 OG 폰트도 받지 않는다.
+export function createPostThumbnailImage(post: Post): ImageResponse {
   const accent = CATEGORY_ACCENT[post.category];
 
   return new ImageResponse(
@@ -230,12 +227,11 @@ export async function createPostThumbnailImage(
           position: "relative",
           background: "#0b0f17",
           backgroundImage: `radial-gradient(650px 650px at 50% 45%, ${accent}30, transparent 70%)`,
-          fontFamily: "Pretendard",
         }}
       >
         <CategoryGlyph category={post.category} color={accent} size={240} />
       </div>
     ),
-    options,
+    POST_COVER_SIZE,
   );
 }

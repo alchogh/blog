@@ -1,3 +1,4 @@
+import { getAllPosts } from "@/entities/post";
 import { ExperienceCard, type ExperienceEntry } from "./experience-card";
 import { SectionTitle } from "./section-title";
 
@@ -120,7 +121,22 @@ const EXPERIENCE: readonly ExperienceEntry[] = [
   },
 ];
 
+// draft 글로 향하는 링크는 프로덕션에서 404가 되므로 렌더 전에 걸러낸다.
+// getAllPosts()가 dev에서는 draft도 포함하므로 로컬 미리보기는 그대로 동작한다.
+function withPublishedLinks(
+  entry: ExperienceEntry,
+  published: ReadonlySet<string>,
+): ExperienceEntry {
+  if (!entry.links) return entry;
+  return {
+    ...entry,
+    links: entry.links.filter((link) => published.has(link.href)),
+  };
+}
+
 export function ExperienceSection() {
+  const published = new Set(getAllPosts().map((post) => post.permalink));
+
   return (
     <section>
       <SectionTitle>Work Experience</SectionTitle>
@@ -128,7 +144,7 @@ export function ExperienceSection() {
         {EXPERIENCE.map((entry) => (
           <ExperienceCard
             key={`${entry.company}-${entry.period}`}
-            entry={entry}
+            entry={withPublishedLinks(entry, published)}
           />
         ))}
       </div>
