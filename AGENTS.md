@@ -61,7 +61,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Icons: `lucide-react` (다른 아이콘 라이브러리 추가 금지)
 - Theme: `next-themes` (다크모드 토글)
 - Image: `sharp` (Next 내장 image pipeline)
-- Font: `wanted-sans` + Geist (next/font)
+- Font: Pretendard (로컬 woff2) + Geist (next/font)
 - MDX 파이프라인: `rehype-pretty-code` + `shiki`, `rehype-slug`, `rehype-autolink-headings`, `remark-gfm`, `remark-github-blockquote-alert`
 - 댓글: giscus
 

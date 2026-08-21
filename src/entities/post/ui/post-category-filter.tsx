@@ -7,7 +7,8 @@ import {
 import { cn } from "@/shared/lib";
 
 interface PostCategoryFilterProps {
-  active?: PostCategory;
+  /** 현재 페이지가 가리키는 항목. 홈처럼 어느 것도 아니면 넘기지 않는다. */
+  active?: PostCategory | "all";
   className?: string;
 }
 
@@ -30,8 +31,8 @@ export function PostCategoryFilter({
     >
       <Link
         href="/posts"
-        aria-current={!active ? "page" : undefined}
-        className={itemClass(!active)}
+        aria-current={active === "all" ? "page" : undefined}
+        className={itemClass(active === "all")}
       >
         전체
       </Link>

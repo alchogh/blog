@@ -97,7 +97,9 @@ export default async function PostPage({ params }: PostPageProps) {
     <Container size="post">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c"),
+        }}
       />
       <PostViewTracker slug={slug} />
       {/* 양쪽 1fr 사이에 640px 본문을 둬서 본문은 항상 가운데, 목차는 오른쪽 여백에 놓인다. */}
