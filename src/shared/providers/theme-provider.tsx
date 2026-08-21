@@ -5,7 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 export type Theme = "light" | "dark" | "system";
@@ -19,6 +19,10 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function isTheme(value: string | null): value is Theme {
+  return value === "light" || value === "dark" || value === "system";
+}
+
 function resolve(theme: Theme): "light" | "dark" {
   if (theme !== "system") return theme;
   return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -31,15 +35,31 @@ function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", resolved === "dark");
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
+// localStorage를 외부 스토어로 읽는다. mount 후 setState로 동기화하면
+// 첫 커밋에서 theme이 잠깐 "system"이라 ThemeScript가 칠해둔 클래스를
+// applyTheme이 덮어쓴다(저장값이 light, OS가 dark일 때 화면이 깜빡임).
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    if (stored === "light" || stored === "dark" || stored === "system") {
-      setThemeState(stored);
-    }
-  }, []);
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function notify() {
+  for (const listener of listeners) listener();
+}
+
+function getSnapshot(): Theme {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return isTheme(stored) ? stored : "system";
+}
+
+function getServerSnapshot(): Theme {
+  return "system";
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   useEffect(() => {
     applyTheme(theme);
@@ -52,7 +72,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = useCallback((next: Theme) => {
     localStorage.setItem(STORAGE_KEY, next);
-    setThemeState(next);
+    notify();
   }, []);
 
   return (
