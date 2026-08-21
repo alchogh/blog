@@ -46,7 +46,10 @@ export function PostCard({ post, views }: PostCardProps) {
         )}
       </div>
 
-      <Link href={post.permalink} className="block">
+      <Link
+        href={post.permalink}
+        className="focus-visible:ring-ring block rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+      >
         <h2 className="text-lg font-semibold tracking-tight transition-colors group-hover:text-muted-foreground">
           {post.title}
         </h2>

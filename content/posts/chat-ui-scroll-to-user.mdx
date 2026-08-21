@@ -86,13 +86,15 @@ export const useChatScrollToUser = <T extends HTMLElement = HTMLDivElement>(
 
 ### 3-1. `requestAnimationFrame`이 왜 필요한가
 
-`useEffect`는 React 커밋 직후에 실행되지만, 그 시점에는 새 user 메시지의 DOM이 아직 페인트되지 않았을 수 있습니다. 곧바로 `scrollIntoView`를 호출하면 직전 레이아웃 기준의 잘못된 위치로 스크롤됩니다.
+`useEffect`는 React 커밋 직후, DOM이 갱신된 뒤에 실행됩니다. 그래서 이 시점의 `scrollIntoView`도 최신 레이아웃을 기준으로 동작합니다. 그런데도 한 프레임 미루는 이유는, 커밋 직후의 높이가 최종 높이가 아닐 수 있어서입니다. 스트리밍으로 이어 붙는 답변 블록이나 아직 로드되지 않은 이미지가 대표적입니다.
 
-rAF는 다음 페인트 직전에 콜백을 실행합니다. DOM 레이아웃이 안정된 다음 프레임으로 한 틱 미루는 셈입니다.
+rAF는 다음 페인트 직전에 콜백을 실행합니다. 그 사이 반영된 DOM 변경까지 포함된 높이 위에서 스크롤합니다. 다만 rAF가 레이아웃 안정을 보장하는 것은 아닙니다. 다음 프레임 뒤에 콘텐츠가 더 붙으면 위치는 다시 어긋납니다.
 
 ### 3-2. cleanup으로 `cancelAnimationFrame`
 
-빠른 연속 입력이나 언마운트 상황에서 예약된 rAF가 그대로 실행되면 의도치 않은 스크롤이나 메모리 누수가 생길 수 있어서, cleanup에서 취소합니다. 작지만 빠뜨리기 쉬운 부분입니다.
+빠른 연속 입력이나 언마운트 상황에서 예약된 rAF가 그대로 실행되면 이전 입력 기준으로 스크롤이 튑니다. cleanup에서 취소하는 이유입니다.
+
+취소 범위는 정확히 알아둘 필요가 있습니다. `cancelAnimationFrame`이 없애는 것은 아직 실행되지 않은 콜백뿐입니다. 이미 시작된 `behavior: "smooth"` 스크롤은 멈추지 않습니다.
 
 ### 3-3. `block: "start"`
 
