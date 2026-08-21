@@ -23,6 +23,8 @@ const posts = {
       slug: s.path(),
       permalink: s.path(),
       metadata: s.metadata(),
+      // 본문 목차. rehype-slug가 붙이는 id와 같은 규칙으로 생성된다.
+      toc: s.toc({ maxDepth: 3 }),
       body: s.mdx(),
     })
     .transform((data) => ({
@@ -49,7 +51,7 @@ export default defineConfig({
       [
         rehypePrettyCode,
         {
-          theme: "vesper",
+          theme: "github-dark",
           keepBackground: true,
         },
       ],

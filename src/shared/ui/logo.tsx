@@ -15,14 +15,14 @@ export function Logo({ className, showWordmark = true }: LogoProps) {
     >
       <span
         aria-hidden
-        className="inline-flex items-center text-amber-400"
+        className="text-brand inline-flex items-center"
       >
         <ChevronLeft className="h-5 w-5" strokeWidth={2.75} />
         <Pencil className="-mx-0.5 h-4 w-4" strokeWidth={2} />
         <ChevronRight className="h-5 w-5" strokeWidth={2.75} />
       </span>
       {showWordmark && (
-        <span className="font-serif text-lg font-medium tracking-tight">
+        <span className="text-[17px] font-semibold tracking-tight">
           {siteConfig.name}
         </span>
       )}

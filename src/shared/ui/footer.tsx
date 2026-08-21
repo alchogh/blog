@@ -21,11 +21,14 @@ export function Footer() {
             href={siteConfig.social.github}
             target="_blank"
             rel="noreferrer"
-            className="hover:text-foreground transition-colors"
+            className="hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             GitHub
           </a>
-          <a href="/rss.xml" className="hover:text-foreground transition-colors">
+          <a
+            href="/rss.xml"
+            className="hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          >
             RSS
           </a>
         </div>

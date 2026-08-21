@@ -8,6 +8,7 @@ import {
   PostComments,
   PostHeader,
   PostNavigation,
+  PostToc,
 } from "@/entities/post";
 import { PostViewTracker } from "@/entities/stats";
 import { siteConfig } from "@/shared/config";
@@ -93,16 +94,25 @@ export default async function PostPage({ params }: PostPageProps) {
   };
 
   return (
-    <Container size="prose">
+    <Container size="post">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PostViewTracker slug={slug} />
-      <PostHeader post={post} />
-      <PostBody code={post.body} />
-      <PostComments slug={slug} />
-      <PostNavigation previous={previous} next={next} />
+      {/* 양쪽 1fr 사이에 640px 본문을 둬서 본문은 항상 가운데, 목차는 오른쪽 여백에 놓인다. */}
+      <div className="xl:grid xl:grid-cols-[1fr_minmax(0,800px)_1fr] xl:gap-10">
+        <div className="hidden xl:block" aria-hidden />
+        <article className="mx-auto w-full max-w-[800px] min-w-0">
+          <PostHeader post={post} />
+          <PostBody code={post.body} />
+          <PostComments slug={slug} />
+          <PostNavigation previous={previous} next={next} />
+        </article>
+        <div className="hidden xl:block">
+          <PostToc toc={post.toc} />
+        </div>
+      </div>
     </Container>
   );
 }

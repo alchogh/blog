@@ -7,27 +7,56 @@
   --font-sans: var(--font-geist), var(--font-pretendard), ui-sans-serif,
     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
     sans-serif;
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 
+  /* 중립색은 완전 무채색(chroma 0)이 아니라 살짝 푸른 회색이다.
+     순수 회색은 "기본값" 인상을 주고, 미세한 색조가 있어야 정돈돼 보인다. */
   --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-muted: oklch(0.97 0 0);
-  --color-muted-foreground: oklch(0.556 0 0);
-  --color-border: oklch(0.922 0 0);
-  --color-accent: oklch(0.205 0 0);
-  --color-accent-foreground: oklch(0.985 0 0);
+  --color-foreground: oklch(0.21 0.034 264); /* 제목·강조. 17.7:1 */
+  --color-body: oklch(0.373 0.034 259); /* 본문. 10.3:1 */
+  --color-muted-foreground: oklch(0.551 0.027 264); /* 메타. 4.8:1 */
+  --color-muted: oklch(0.967 0.003 264);
+  --color-border: oklch(0.928 0.006 264);
+  --color-accent: oklch(0.21 0.034 264);
+  --color-accent-foreground: oklch(0.985 0.002 247);
+
+  /* 강조색. 로고·본문 링크·포커스 링·활성 상태에만. 흰 배경 대비 5.07:1 */
+  --color-brand: oklch(0.55 0.14 60);
+  --color-brand-hover: oklch(0.48 0.13 58);
+  --color-brand-subtle: oklch(0.96 0.03 75);
+  --color-ring: oklch(0.55 0.14 60);
+
+  /* 카테고리. 점과 배지 텍스트에 같은 값을 쓰므로 텍스트 기준(4.5:1)을 맞춘다.
+     brand(hue 60) 주변의 따뜻한 영역은 비워둔다. 흰 배경 대비 5.6~6.6:1 */
+  --color-cat-backend: oklch(0.5 0.13 150);
+  --color-cat-react: oklch(0.5 0.085 195); /* sRGB 경계라 채도 제한 */
+  --color-cat-typescript: oklch(0.5 0.13 253);
+  --color-cat-deep-dive: oklch(0.5 0.13 304);
+  --color-cat-tooling: oklch(0.5 0.13 350);
 }
 
 .dark {
-  --color-background: oklch(0.145 0 0);
-  --color-foreground: oklch(0.985 0 0);
-  --color-muted: oklch(0.205 0 0);
-  --color-muted-foreground: oklch(0.708 0 0);
-  --color-border: oklch(0.27 0 0);
-  --color-accent: oklch(0.985 0 0);
-  --color-accent-foreground: oklch(0.205 0 0);
+  --color-background: oklch(0.17 0.012 265); /* 순검이 아니라 아주 옅은 남색 */
+  --color-foreground: oklch(0.98 0.003 247); /* 18.1:1 */
+  --color-body: oklch(0.872 0.01 258); /* 13.0:1 */
+  --color-muted-foreground: oklch(0.707 0.022 261); /* 7.4:1 */
+  --color-muted: oklch(0.235 0.016 264);
+  --color-border: oklch(0.3 0.02 262);
+  --color-accent: oklch(0.98 0.003 247);
+  --color-accent-foreground: oklch(0.21 0.034 264);
+
+  --color-brand: oklch(0.78 0.13 65); /* 9.3:1 */
+  --color-brand-hover: oklch(0.85 0.12 70);
+  --color-brand-subtle: oklch(0.3 0.05 65);
+  --color-ring: oklch(0.78 0.13 65);
+
+  /* 8.9~10.2:1 */
+  --color-cat-backend: oklch(0.78 0.13 150);
+  --color-cat-react: oklch(0.78 0.13 195);
+  --color-cat-typescript: oklch(0.78 0.115 253);
+  --color-cat-deep-dive: oklch(0.78 0.13 304);
+  --color-cat-tooling: oklch(0.78 0.13 350);
 }
 
 html {
@@ -40,6 +69,10 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* 한국어는 어절 단위로 끊어야 한다. 기본값은 "메시지를"을 줄 사이에서 자른다.
+     끊을 데 없는 긴 영문/URL은 break-word로 넘긴다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 ::selection {
@@ -47,8 +80,28 @@ body {
   color: var(--color-accent-foreground);
 }
 
+/* prose 색은 토큰에 연결한다. 토큰이 다크에서 뒤집히므로 prose-invert가 필요 없다. */
+.prose {
+  --tw-prose-body: var(--color-body);
+  --tw-prose-headings: var(--color-foreground);
+  --tw-prose-lead: var(--color-muted-foreground);
+  --tw-prose-links: var(--color-brand);
+  --tw-prose-bold: var(--color-foreground);
+  --tw-prose-counters: var(--color-muted-foreground);
+  --tw-prose-bullets: var(--color-border);
+  --tw-prose-hr: var(--color-border);
+  --tw-prose-quotes: var(--color-body);
+  --tw-prose-quote-borders: var(--color-border);
+  --tw-prose-captions: var(--color-muted-foreground);
+  --tw-prose-code: var(--color-foreground);
+  --tw-prose-th-borders: var(--color-border);
+  --tw-prose-td-borders: var(--color-border);
+}
+
+/* 코드 블록은 라이트/다크 상관없이 항상 다크. rehype-pretty-code가
+   keepBackground로 넣는 배경을 덮지 않는다. 크기는 본문(18px)보다 조금 작게. */
 figure[data-rehype-pretty-code-figure] pre {
-  @apply overflow-x-auto rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm leading-relaxed;
+  @apply border-border overflow-x-auto rounded-xl border px-5 py-4 text-[15px] leading-relaxed;
 }
 
 figure[data-rehype-pretty-code-figure] code {
@@ -63,11 +116,19 @@ figure[data-rehype-pretty-code-figure] code[data-line-numbers] > [data-line]::be
 }
 
 figure[data-rehype-pretty-code-figure] [data-highlighted-line] {
-  @apply bg-muted;
+  background: color-mix(in oklch, var(--color-brand) 14%, transparent);
+  box-shadow: inset 2px 0 0 var(--color-brand);
 }
 
 :not(pre) > code {
-  @apply rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.85em];
+  @apply border-border bg-muted rounded border px-1.5 py-0.5 font-mono text-[0.85em];
+}
+
+/* @tailwindcss/typography가 인라인 코드에 붙이는 백틱 제거.
+   배경·테두리로 이미 코드임이 드러난다. */
+.prose :where(code):not(:where([class~="not-prose"] *))::before,
+.prose :where(code):not(:where([class~="not-prose"] *))::after {
+  content: none;
 }
 
 .markdown-alert {
@@ -122,4 +183,31 @@ figure[data-rehype-pretty-code-figure] [data-highlighted-line] {
 }
 .dark .markdown-alert-caution {
   --alert-color: oklch(0.72 0.18 25);
+}
+
+/* 카테고리 배지. Tailwind 클래스를 5색×2속성으로 늘리는 대신
+   data-category로 CSS 변수 하나만 갈아끼운다. */
+[data-category="backend"] {
+  --cat: var(--color-cat-backend);
+}
+[data-category="react"] {
+  --cat: var(--color-cat-react);
+}
+[data-category="typescript"] {
+  --cat: var(--color-cat-typescript);
+}
+[data-category="deep-dive"] {
+  --cat: var(--color-cat-deep-dive);
+}
+[data-category="tooling"] {
+  --cat: var(--color-cat-tooling);
+}
+
+.category-badge {
+  background: color-mix(in oklch, var(--cat) 12%, transparent);
+  color: var(--cat);
+}
+
+.category-dot {
+  background: var(--cat);
 }

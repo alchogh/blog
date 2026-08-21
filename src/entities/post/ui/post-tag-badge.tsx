@@ -11,7 +11,7 @@ export function PostTagBadge({ tag, className }: PostTagBadgeProps) {
     <Link
       href={`/tags/${tag}`}
       className={cn(
-        "text-xs text-muted-foreground transition-colors hover:text-foreground",
+        "text-muted-foreground hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm text-xs transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
         className,
       )}
     >

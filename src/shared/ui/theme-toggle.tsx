@@ -44,7 +44,7 @@ export function ThemeToggle() {
         aria-expanded={open}
         aria-label="Theme"
         suppressHydrationWarning
-        className="border-border text-muted-foreground hover:text-foreground flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border transition-colors"
+        className="border-border text-muted-foreground hover:text-foreground hover:border-foreground focus-visible:ring-ring focus-visible:ring-offset-background flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <CurrentIcon className="h-3.5 w-3.5" suppressHydrationWarning />
       </button>

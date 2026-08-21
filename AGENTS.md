@@ -42,6 +42,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - [.claude/skills/clean-code/SKILL.md](.claude/skills/clean-code/SKILL.md) — SRP, 함수형 우선·class 사용 시점, 명명, 주석, 추상화 원칙.
 - [.claude/skills/nextjs-app-router/SKILL.md](.claude/skills/nextjs-app-router/SKILL.md) — Server/Client 경계, 데이터 페칭, 캐싱, React 19 패턴.
 - [.claude/skills/backend/SKILL.md](.claude/skills/backend/SKILL.md) — Supabase + Route Handler, 보안 경계, 원자성(RPC), 마이그레이션.
+- [.claude/skills/design/SKILL.md](.claude/skills/design/SKILL.md) — 색 토큰, 타이포 스케일, 레이아웃, 이미지를 넣는 기준.
 
 규칙끼리 충돌하면 **clean-code > fsd-lite > 그 외** 순으로 우선. 규칙이 현재 코드와 다르게 보이면 바로 고치지 말고 먼저 사용자에게 확인.
 

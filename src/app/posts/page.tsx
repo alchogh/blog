@@ -14,7 +14,7 @@ export default async function PostsPage() {
 
   return (
     <Container size="wide">
-      <PostCategoryFilter />
+      <PostCategoryFilter className="border-border mb-10 border-b pb-5" />
       <PostList posts={posts} views={views} />
     </Container>
   );

@@ -13,10 +13,10 @@ export function PostList({
   views,
 }: PostListProps) {
   if (posts.length === 0) {
-    return <p className="py-8 text-sm text-muted-foreground">{empty}</p>;
+    return <p className="text-muted-foreground py-8 text-sm">{empty}</p>;
   }
   return (
-    <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2">
+    <div className="space-y-12">
       {posts.map((post) => (
         <PostCard
           key={post.slug}
