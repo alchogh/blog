@@ -20,7 +20,7 @@ export default function CategoriesPage() {
           <li key={category}>
             <Link
               href={`/categories/${category}`}
-              className="flex items-center justify-between py-4 transition-colors hover:text-muted-foreground"
+              className="hover:text-brand focus-visible:ring-ring focus-visible:ring-offset-background flex items-center justify-between rounded-sm py-4 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               <span className="text-base font-medium">
                 {CATEGORY_LABELS[category]}

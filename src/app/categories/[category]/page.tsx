@@ -41,10 +41,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <Container size="wide">
-      <PostCategoryFilter active={category} />
+      <PostCategoryFilter active={category} className="border-border mb-10 border-b pb-5" />
       <PostList
         posts={posts}
         views={views}
+       
         empty={`${CATEGORY_LABELS[category]} 카테고리에 아직 글이 없습니다.`}
       />
     </Container>

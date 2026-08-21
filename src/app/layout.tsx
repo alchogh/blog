@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { geist, pretendard, siteConfig, wantedSans } from "@/shared/config";
+import { geist, pretendard, siteConfig } from "@/shared/config";
 import { ThemeProvider, ThemeScript } from "@/shared/providers";
 import { Footer, Header } from "@/shared/ui";
 import "./globals.css";
@@ -55,7 +55,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${pretendard.variable} ${wantedSans.variable} ${geist.variable} h-full antialiased`}
+      className={`${pretendard.variable} ${geist.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>

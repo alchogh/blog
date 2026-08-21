@@ -18,10 +18,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <Container
-      size="prose"
-      className="[font-family:var(--font-geist),var(--font-wanted-sans),system-ui,sans-serif]"
-    >
+    <Container size="prose">
       <ProfileHeader />
       <div className="space-y-14 pb-20">
         <Intro />

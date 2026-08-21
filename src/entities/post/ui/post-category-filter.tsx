@@ -7,30 +7,47 @@ import {
 import { cn } from "@/shared/lib";
 
 interface PostCategoryFilterProps {
-  active?: PostCategory;
+  /** 현재 페이지가 가리키는 항목. 홈처럼 어느 것도 아니면 넘기지 않는다. */
+  active?: PostCategory | "all";
+  className?: string;
 }
 
-export function PostCategoryFilter({ active }: PostCategoryFilterProps) {
-  const itemClass = (isActive: boolean) =>
-    cn(
-      "transition-colors hover:text-foreground",
-      isActive ? "font-medium text-foreground" : "text-muted-foreground",
-    );
+const itemClass = (isActive: boolean) =>
+  cn(
+    "focus-visible:ring-ring focus-visible:ring-offset-background inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+    isActive
+      ? "bg-brand-subtle text-brand font-medium"
+      : "text-muted-foreground hover:text-foreground hover:bg-muted",
+  );
 
+export function PostCategoryFilter({
+  active,
+  className,
+}: PostCategoryFilterProps) {
   return (
     <nav
-      aria-label="Filter posts by category"
-      className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-8 text-sm"
+      aria-label="카테고리로 글 거르기"
+      className={cn("-mx-3 flex flex-wrap items-center gap-1", className)}
     >
-      <Link href="/posts" className={itemClass(!active)}>
-        All
+      <Link
+        href="/posts"
+        aria-current={active === "all" ? "page" : undefined}
+        className={itemClass(active === "all")}
+      >
+        전체
       </Link>
       {POST_CATEGORIES.map((category) => (
         <Link
           key={category}
           href={`/categories/${category}`}
+          aria-current={active === category ? "page" : undefined}
           className={itemClass(active === category)}
         >
+          <span
+            aria-hidden
+            data-category={category}
+            className="category-dot size-2 rounded-full"
+          />
           {CATEGORY_LABELS[category]}
         </Link>
       ))}

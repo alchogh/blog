@@ -8,24 +8,34 @@ interface PostCategoryBadgeProps {
   className?: string;
 }
 
+// 색은 globals.css에서 data-category -> --cat -> .category-badge로 흐른다.
 export function PostCategoryBadge({
   category,
   asLink = false,
   className,
 }: PostCategoryBadgeProps) {
   const classes = cn(
-    "inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground",
-    asLink && "transition-colors hover:border-foreground hover:text-foreground",
+    "category-badge inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+    asLink &&
+      "focus-visible:ring-ring focus-visible:ring-offset-background transition-opacity hover:opacity-75 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
     className,
   );
   const label = CATEGORY_LABELS[category];
 
   if (asLink) {
     return (
-      <Link href={`/categories/${category}`} className={classes}>
+      <Link
+        href={`/categories/${category}`}
+        data-category={category}
+        className={classes}
+      >
         {label}
       </Link>
     );
   }
-  return <span className={classes}>{label}</span>;
+  return (
+    <span data-category={category} className={classes}>
+      {label}
+    </span>
+  );
 }

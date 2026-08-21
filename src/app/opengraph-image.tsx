@@ -31,7 +31,7 @@ export default async function Image() {
               width: 12,
               height: 12,
               borderRadius: 999,
-              background: "#10b981",
+              background: "#f0a556",
             }}
           />
           <span style={{ fontSize: 28, color: "#9ca3af" }}>

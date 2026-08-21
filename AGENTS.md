@@ -42,6 +42,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - [.claude/skills/clean-code/SKILL.md](.claude/skills/clean-code/SKILL.md) — SRP, 함수형 우선·class 사용 시점, 명명, 주석, 추상화 원칙.
 - [.claude/skills/nextjs-app-router/SKILL.md](.claude/skills/nextjs-app-router/SKILL.md) — Server/Client 경계, 데이터 페칭, 캐싱, React 19 패턴.
 - [.claude/skills/backend/SKILL.md](.claude/skills/backend/SKILL.md) — Supabase + Route Handler, 보안 경계, 원자성(RPC), 마이그레이션.
+- [.claude/skills/design/SKILL.md](.claude/skills/design/SKILL.md) — 색 토큰, 타이포 스케일, 레이아웃, 이미지를 넣는 기준.
 
 규칙끼리 충돌하면 **clean-code > fsd-lite > 그 외** 순으로 우선. 규칙이 현재 코드와 다르게 보이면 바로 고치지 말고 먼저 사용자에게 확인.
 
@@ -60,7 +61,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Icons: `lucide-react` (다른 아이콘 라이브러리 추가 금지)
 - Theme: `next-themes` (다크모드 토글)
 - Image: `sharp` (Next 내장 image pipeline)
-- Font: `wanted-sans` + Geist (next/font)
+- Font: Pretendard (로컬 woff2) + Geist (next/font)
 - MDX 파이프라인: `rehype-pretty-code` + `shiki`, `rehype-slug`, `rehype-autolink-headings`, `remark-gfm`, `remark-github-blockquote-alert`
 - 댓글: giscus
 

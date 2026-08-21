@@ -8,3 +8,4 @@ export * from "./post-header";
 export * from "./post-body";
 export * from "./post-comments";
 export * from "./post-navigation";
+export * from "./post-toc";

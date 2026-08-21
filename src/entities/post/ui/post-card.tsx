@@ -1,9 +1,9 @@
 import { Eye } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { formatDate } from "@/shared/lib";
 import type { Post } from "../model";
 import { PostCategoryBadge } from "./post-category-badge";
-import { PostMeta } from "./post-meta";
 
 interface PostCardProps {
   post: Post;
@@ -11,52 +11,63 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, views }: PostCardProps) {
-  // frontmatter thumbnail이 있으면 그 이미지를, 없으면 카테고리 자동 커버를 쓴다.
-  const thumbnail = post.thumbnail;
-  const src = thumbnail?.src ?? `/posts/${post.slug}/thumbnail`;
+  const { thumbnail } = post;
 
   return (
-    <article className="group flex flex-col gap-3">
-      <Link
-        href={post.permalink}
-        aria-hidden
-        tabIndex={-1}
-        className="relative block aspect-16/10 overflow-hidden rounded-xl border border-border"
-      >
-        <Image
-          src={src}
-          alt=""
-          fill
-          sizes="(max-width: 640px) 100vw, 480px"
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          {...(thumbnail?.blurDataURL
-            ? { placeholder: "blur" as const, blurDataURL: thumbnail.blurDataURL }
-            : {})}
-        />
-      </Link>
+    <article className="group relative flex gap-6">
+      <div className="min-w-0 flex-1">
+        <Link
+          href={post.permalink}
+          className="focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:outline-none"
+        >
+          {/* 카드 전체를 클릭 영역으로. 배지 링크는 z-10으로 위에 둔다. */}
+          <span className="absolute inset-0" aria-hidden />
+          <h2 className="group-hover:text-brand text-xl leading-snug font-bold tracking-tight transition-colors">
+            {post.title}
+          </h2>
+        </Link>
 
-      <div className="flex items-center gap-2">
-        <PostCategoryBadge category={post.category} asLink />
-        <PostMeta date={post.date} readingTime={post.metadata.readingTime} />
-        {views !== undefined && (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
-            <Eye className="size-3.5" aria-hidden />
-            {views.toLocaleString()}
-          </span>
-        )}
-      </div>
-
-      <Link
-        href={post.permalink}
-        className="focus-visible:ring-ring block rounded-sm focus-visible:ring-2 focus-visible:outline-none"
-      >
-        <h2 className="text-lg font-semibold tracking-tight transition-colors group-hover:text-muted-foreground">
-          {post.title}
-        </h2>
-        <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-2.5 line-clamp-2 max-w-2xl text-[15px] leading-relaxed">
           {post.summary}
         </p>
-      </Link>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <PostCategoryBadge
+            category={post.category}
+            asLink
+            className="relative z-10"
+          />
+          <time dateTime={post.date} className="text-muted-foreground text-sm">
+            {formatDate(post.date)}
+          </time>
+          {views !== undefined && (
+            <span className="text-muted-foreground flex items-center gap-1 text-sm tabular-nums">
+              <Eye className="size-3.5" aria-hidden />
+              {views.toLocaleString()}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 썸네일은 frontmatter에 있는 글만. 우측에 두는 이유: 이미지가 있는 글과
+          없는 글이 섞여도 제목 시작 위치가 흔들리지 않는다. */}
+      {thumbnail && (
+        <div className="border-border relative hidden aspect-square w-[184px] shrink-0 overflow-hidden rounded-xl border sm:block">
+          <Image
+            src={thumbnail.src}
+            alt=""
+            fill
+            sizes="184px"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            {...(thumbnail.blurDataURL
+              ? {
+                  placeholder: "blur" as const,
+                  blurDataURL: thumbnail.blurDataURL,
+                }
+              : {})}
+          />
+        </div>
+      )}
     </article>
   );
 }

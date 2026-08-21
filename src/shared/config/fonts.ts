@@ -8,13 +8,6 @@ export const pretendard = localFont({
   weight: "45 920",
 });
 
-export const wantedSans = localFont({
-  src: "./fonts/WantedSansVariable.woff2",
-  display: "swap",
-  variable: "--font-wanted-sans",
-  weight: "400 1000",
-});
-
 export const geist = Geist({
   subsets: ["latin"],
   display: "swap",
