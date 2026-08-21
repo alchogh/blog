@@ -2,6 +2,8 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { getSupabaseAdmin } from "@/shared/lib/supabase";
 
+export const POST_VIEWS_TAG = "post-views";
+
 async function fetchPostViews(): Promise<Record<string, number>> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase.rpc("get_post_views");
@@ -15,5 +17,5 @@ async function fetchPostViews(): Promise<Record<string, number>> {
 
 export const getPostViews = unstable_cache(fetchPostViews, ["post-views"], {
   revalidate: 60,
-  tags: ["post-views"],
+  tags: [POST_VIEWS_TAG],
 });
