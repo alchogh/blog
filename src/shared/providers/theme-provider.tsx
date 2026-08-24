@@ -40,9 +40,18 @@ function applyTheme(theme: Theme) {
 // applyTheme이 덮어쓴다(저장값이 light, OS가 dark일 때 화면이 깜빡임).
 const listeners = new Set<() => void>();
 
+// 같은 탭의 변경은 notify()로, 다른 탭의 변경은 storage 이벤트로 받는다.
+// storage 이벤트는 값을 쓴 탭에는 오지 않으므로 둘 다 필요하다.
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === STORAGE_KEY) listener();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
 }
 
 function notify() {
