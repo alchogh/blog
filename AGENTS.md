@@ -59,7 +59,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - UI util: `clsx` + `tailwind-merge` → `cn()` 헬퍼. variant는 `class-variance-authority` (cva).
 - Icons: `lucide-react` (다른 아이콘 라이브러리 추가 금지)
-- Theme: `next-themes` (다크모드 토글)
+- Theme: 자체 구현 ([src/shared/providers/theme-provider.tsx](src/shared/providers/theme-provider.tsx)). `useSyncExternalStore`로 `localStorage`를 읽고, `<body>` 최상단 인라인 스크립트([theme-script.tsx](src/shared/providers/theme-script.tsx))가 첫 페인트 전에 `.dark`를 칠한다. 라이브러리 안 씀.
 - Image: `sharp` (Next 내장 image pipeline)
 - Font: Pretendard (로컬 woff2) + Geist (next/font)
 - MDX 파이프라인: `rehype-pretty-code` + `shiki`, `rehype-slug`, `rehype-autolink-headings`, `remark-gfm`, `remark-github-blockquote-alert`
@@ -109,7 +109,7 @@ vitest/jest 임의 추가 금지. 빌드 깨졌을 때 우회 금지 — 원인 
 - **Tailwind v4 `@theme` 토큰만 사용** ([src/app/globals.css](src/app/globals.css)).
   `--color-background/foreground/muted/border/accent` 등 OKLCH 기반.
 - 새 색은 inline hex/rgb 금지 → `globals.css`의 `@theme`에 토큰 추가 후 `bg-*`/`text-*`.
-- 다크 모드는 `.dark` 클래스 + `@custom-variant dark`. 토글은 `next-themes`.
+- 다크 모드는 `.dark` 클래스 + `@custom-variant dark`. 토글은 자체 `ThemeProvider` / `ThemeToggle`.
 
 ### 컴포넌트
 
