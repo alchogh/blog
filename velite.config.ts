@@ -1,9 +1,27 @@
 import { defineConfig, s } from "velite";
 import rehypePrettyCode from "rehype-pretty-code";
+import { bundledThemes } from "shiki";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import remarkGfm from "remark-gfm";
 import { remarkAlert } from "remark-github-blockquote-alert";
+
+// github-dark의 주석 색 #6a737d은 이 테마 배경 #24292e 대비 3.05:1로 WCAG AA(4.5:1)에도
+// 못 미친다. 다른 토큰은 전부 통과하므로 주석 색만 올린다.
+// #b1bac4는 7.47:1로 AAA를 넘기면서, 본문 코드(#e1e4e8, 11.5:1)보다는 어두워 위계가 남는다.
+// 주석만으로 이뤄진 코드 블록도 읽히게 하려면 AA로는 부족하다.
+const COMMENT_FOREGROUND = "#b1bac4";
+
+const githubDark = (await bundledThemes["github-dark"]()).default;
+
+const codeTheme = {
+  ...githubDark,
+  tokenColors: githubDark.tokenColors?.map((rule) => {
+    const scopes = Array.isArray(rule.scope) ? rule.scope : [rule.scope];
+    if (!scopes.includes("comment")) return rule;
+    return { ...rule, settings: { ...rule.settings, foreground: COMMENT_FOREGROUND } };
+  }),
+};
 
 const POST_CATEGORIES = ["typescript", "deep-dive", "react", "tooling", "backend"] as const;
 
@@ -51,7 +69,7 @@ export default defineConfig({
       [
         rehypePrettyCode,
         {
-          theme: "github-dark",
+          theme: codeTheme,
           keepBackground: true,
         },
       ],
