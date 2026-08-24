@@ -1,5 +1,6 @@
 import { getAllPosts } from "@/entities/post";
-import { incrementPostView } from "@/entities/stats";
+import { revalidateTag } from "next/cache";
+import { incrementPostView, POST_VIEWS_TAG } from "@/entities/stats";
 
 const BOT_PATTERN =
   /bot|crawler|spider|crawling|preview|fetch|monitor|headless|lighthouse|pingdom|slurp|baiduspider/i;
@@ -26,6 +27,7 @@ export async function POST(
 
   try {
     await incrementPostView(slug);
+    revalidateTag(POST_VIEWS_TAG, "max");
   } catch {
     // view count is best-effort; never surface failure to the client
   }

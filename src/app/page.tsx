@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAllPosts, PostCategoryFilter, PostList } from "@/entities/post";
+import { getPostViews } from "@/entities/stats";
 import { siteConfig } from "@/shared/config";
 import { Container } from "@/shared/ui";
 
 const RECENT_COUNT = 5;
 
-export default function HomePage() {
+export default async function HomePage() {
   const posts = getAllPosts();
+  const views = await getPostViews().catch(() => undefined);
 
   return (
     <Container size="wide">
@@ -36,7 +38,7 @@ export default function HomePage() {
       <PostCategoryFilter className="border-border mt-7 border-b pb-5" />
 
       <section className="mt-12">
-        <PostList posts={posts.slice(0, RECENT_COUNT)} />
+        <PostList posts={posts.slice(0, RECENT_COUNT)} views={views} />
         {posts.length > RECENT_COUNT && (
           <Link
             href="/posts"

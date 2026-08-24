@@ -3,6 +3,8 @@ import { unstable_cache } from "next/cache";
 import { getSupabaseAdmin } from "@/shared/lib/supabase";
 import type { VisitStats } from "../model";
 
+export const VISIT_STATS_TAG = "visit-stats";
+
 async function fetchVisitStats(): Promise<VisitStats> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase.rpc("get_visit_stats");
@@ -17,5 +19,5 @@ async function fetchVisitStats(): Promise<VisitStats> {
 
 export const getVisitStats = unstable_cache(fetchVisitStats, ["visit-stats"], {
   revalidate: 60,
-  tags: ["visit-stats"],
+  tags: [VISIT_STATS_TAG],
 });
