@@ -25,6 +25,26 @@ const codeTheme = {
 
 const POST_CATEGORIES = ["typescript", "deep-dive", "react", "tooling", "backend"] as const;
 
+// 목록 카드 커버 모티프. src/entities/post/model/post-query.ts의 POST_COVERS와 같은 값을
+// 유지한다. velite 설정은 @/ alias를 못 읽어서 여기서 한 번 더 적는다.
+const POST_COVERS = [
+  "branch",
+  "chunks",
+  "contrast",
+  "counter",
+  "envelope",
+  "gate",
+  "layers",
+  "mapping",
+  "ports",
+  "scroll",
+  "swatches",
+  "table-vs-doc",
+  "terminal",
+  "tree",
+  "tunnel",
+] as const;
+
 const posts = {
   name: "Post",
   pattern: "posts/**/*.mdx",
@@ -35,7 +55,9 @@ const posts = {
       date: s.isodate(),
       category: s.enum(POST_CATEGORIES),
       tags: s.array(s.string()).default([]),
-      // 실제 스크린샷·로고를 쓰고 싶은 글만 넣는다. 없으면 자동 커버로 대체.
+      // 목록 카드 상단 SVG 커버의 모티프. 없으면 카테고리 기본값으로 떨어진다.
+      cover: s.enum(POST_COVERS).optional(),
+      // 실사 스크린샷·로고. 글 상세 헤더에만 쓴다. 목록 카드는 cover가 담당.
       thumbnail: s.image().optional(),
       draft: s.boolean().default(false),
       slug: s.path(),
