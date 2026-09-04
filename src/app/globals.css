@@ -211,3 +211,9 @@ figure[data-rehype-pretty-code-figure] [data-highlighted-line] {
 .category-dot {
   background: var(--cat);
 }
+
+/* 목록 카드 커버. 도형은 currentColor를 쓰므로 여기서 color만 정해주면 된다. */
+.category-cover {
+  background: color-mix(in oklch, var(--cat) 8%, transparent);
+  color: var(--cat);
+}

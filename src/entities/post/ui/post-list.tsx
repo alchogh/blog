@@ -1,8 +1,8 @@
-import type { Post } from "../model";
+import type { PostListItem } from "../model";
 import { PostCard } from "./post-card";
 
 interface PostListProps {
-  posts: Post[];
+  posts: PostListItem[];
   empty?: string;
   views?: Record<string, number>;
 }
@@ -16,7 +16,7 @@ export function PostList({
     return <p className="text-muted-foreground py-8 text-sm">{empty}</p>;
   }
   return (
-    <div className="space-y-12">
+    <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2">
       {posts.map((post) => (
         <PostCard
           key={post.slug}

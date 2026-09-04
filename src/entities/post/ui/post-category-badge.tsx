@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CATEGORY_LABELS, type PostCategory } from "@/shared/config";
 import { cn } from "@/shared/lib";
+import { buildPostsHref } from "../lib";
 
 interface PostCategoryBadgeProps {
   category: PostCategory;
@@ -25,7 +26,7 @@ export function PostCategoryBadge({
   if (asLink) {
     return (
       <Link
-        href={`/categories/${category}`}
+        href={buildPostsHref({ categories: [category] })}
         data-category={category}
         className={classes}
       >
