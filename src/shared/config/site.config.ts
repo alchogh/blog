@@ -30,7 +30,7 @@ export const siteConfig = {
     email: `${AUTHOR_HANDLE}.fe@gmail.com`,
   },
   social: {
-    github: `https://github.com/alchogh`,
+    github: `https://github.com/${AUTHOR_HANDLE}`,
   },
   // 목록이 루트라 별도 Posts 항목이 없다. 로고가 루트로 가는 링크다.
   nav: [
